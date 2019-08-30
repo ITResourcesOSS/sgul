@@ -21,8 +21,8 @@ var loggerInstance *logrus.Logger
 
 // GetLogger returns the logger instance. Iff the instance is nil, then the instance will be initialized.
 func GetLogger() *logrus.Logger {
-	conf := GetConfiguration().Log
-	if loggerInstance == nil {
+	once.Do(func() {
+		conf := GetConfiguration().Log
 		loggerInstance = logrus.New()
 		if IsSet("log") {
 			// file log with rotation
@@ -54,9 +54,9 @@ func GetLogger() *logrus.Logger {
 			Formatter.FullTimestamp = true
 			logrus.SetFormatter(Formatter)
 		}
-	}
 
-	loggerInstance.Debug("Config and Logger initialized")
+		loggerInstance.Debug("Config and Logger initialized")
+	})
 
 	return loggerInstance
 }
