@@ -120,11 +120,11 @@ type (
 )
 
 var instance *Configuration
-var once sync.Once
+var onceConfig sync.Once
 
 // GetConfiguration returns the Configuration structure singleton instance.
 func GetConfiguration() *Configuration {
-	once.Do(func() {
+	onceConfig.Do(func() {
 		loadConfiguration()
 	})
 

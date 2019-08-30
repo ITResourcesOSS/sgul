@@ -10,6 +10,7 @@ package sgul
 
 import (
 	"path"
+	"sync"
 
 	"github.com/mattn/go-colorable"
 	"github.com/sirupsen/logrus"
@@ -17,11 +18,12 @@ import (
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
 
+var onceLogger sync.Once
 var loggerInstance *logrus.Logger
 
 // GetLogger returns the logger instance. Iff the instance is nil, then the instance will be initialized.
 func GetLogger() *logrus.Logger {
-	once.Do(func() {
+	onceLogger.Do(func() {
 		conf := GetConfiguration().Log
 		loggerInstance = logrus.New()
 		if IsSet("log") {
