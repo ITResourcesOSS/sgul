@@ -22,10 +22,10 @@ import (
 // Defines the String() func to be used to log out struct values.
 type DTO struct{}
 
-func (dto *DTO) String() string {
+func (dto DTO) String() string {
 	var buffer bytes.Buffer
 	buffer.WriteString("[")
-	s := structs.New(&dto)
+	s := structs.New(dto)
 	for _, f := range s.Fields() {
 		buffer.WriteString(fmt.Sprintf(" %+v: <%+v>;", f.Name(), f.Value()))
 	}
