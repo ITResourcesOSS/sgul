@@ -12,37 +12,79 @@
 package sgul
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi"
 )
 
-// ClientError is an error whose details to be shared with client.
-type ClientError interface {
-	Error() string
-	// ResponseBody returns response body.
-	ResponseBody() ([]byte, error)
-	// ResponseHeaders returns http status code and headers.
-	ResponseHeaders() (int, map[string]string)
+type (
+	// ClientError is an error whose details to be shared with client.
+	ClientError interface {
+		Error() string
+		// ResponseBody returns response body.
+		ResponseBody() ([]byte, error)
+		// ResponseHeaders returns http status code and headers.
+		ResponseHeaders() (int, map[string]string)
+	}
+
+	// HTTPError implements ClientError interface.
+	HTTPError struct {
+		Status  int         `json:"status"`
+		Err     string      `json:"error"`
+		Message interface{} `json:"detail"`
+	}
+
+	// ChiController defines the interface for an API Controller with Chi Router
+	ChiController interface {
+		Router() chi.Router
+	}
+
+	// Controller defines the base API Controller structure
+	Controller struct {
+		// Path is the base routing path for each route of the controller
+		Path string
+	}
+)
+
+// HTTPError ------------------------------------------------------------
+
+func (e *HTTPError) Error() string {
+	// if e.Err == nil {
+	// 	return e.Message
+	// }
+	// return e.Message + " : " + e.Err.Error()
+	return fmt.Sprintf("%v : %s", e.Message, e.Err)
 }
 
-// HTTPError implements ClientError interface.
-type HTTPError struct {
-	Status  int         `json:"status"`
-	Err     string      `json:"error"`
-	Message interface{} `json:"detail"`
+// ResponseBody returns JSON response body.
+func (e *HTTPError) ResponseBody() ([]byte, error) {
+	body, err := json.Marshal(e)
+	if err != nil {
+		return nil, fmt.Errorf("Error while parsing response body: %v", err)
+	}
+	return body, nil
 }
 
-// ChiController defines the interface for an API Controller with Chi Router
-type ChiController interface {
-	Router() chi.Router
+// ResponseHeaders returns http status code and headers.
+func (e *HTTPError) ResponseHeaders() (int, map[string]string) {
+	return e.Status, map[string]string{
+		"Content-Type": "application/json; charset=utf-8",
+	}
 }
 
-// Controller defines the base API Controller structure
-type Controller struct {
-	// Path is the base routing path for each route of the controller
-	Path string
+// NewHTTPError returns a new HTTPError instance
+func NewHTTPError(err error, status int, message interface{}) error {
+
+	return &HTTPError{
+		Err:     err.Error(),
+		Message: message,
+		Status:  status,
+	}
 }
+
+// Controller ------------------------------------------------------------
 
 // RenderError returns error to the client
 func (c *Controller) RenderError(w http.ResponseWriter, err error) {
