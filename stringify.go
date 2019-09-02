@@ -8,7 +8,7 @@
 // Thanks for your useful tip.
 
 // Package sgul defines common structures and functionalities for applications.
-// dto.go defines commons for a DTo object (just to have a String() func).
+// stringify.go converts a struct to its string representation.
 package sgul
 
 import (
@@ -18,14 +18,11 @@ import (
 	"github.com/fatih/structs"
 )
 
-// DTO represent the base struct for a DTO.
-// Defines the String() func to be used to log out struct values.
-type DTO struct{}
-
-func (dto *DTO) String() string {
+// Stringify converts a struct to its string representation.
+func Stringify(strct interface{}) string {
 	var buffer bytes.Buffer
 	buffer.WriteString("[")
-	s := structs.New(&dto)
+	s := structs.New(&strct)
 	for _, f := range s.Fields() {
 		buffer.WriteString(fmt.Sprintf(" %+v: <%+v>;", f.Name(), f.Value()))
 	}
