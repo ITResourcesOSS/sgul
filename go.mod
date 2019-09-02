@@ -3,6 +3,7 @@ module github.com/ITResourcesOSS/sgul
 go 1.12
 
 require (
+	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/go-mach/gm-config v0.0.0-20190711141405-3918a3917e5e
 	github.com/jinzhu/gorm v1.9.10
 	github.com/mattn/go-colorable v0.1.2
