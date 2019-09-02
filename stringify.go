@@ -22,7 +22,7 @@ import (
 func Stringify(strct interface{}) string {
 	var buffer bytes.Buffer
 	buffer.WriteString("[")
-	s := structs.New(&strct)
+	s := structs.New(strct)
 	for _, f := range s.Fields() {
 		buffer.WriteString(fmt.Sprintf(" %+v: <%+v>;", f.Name(), f.Value()))
 	}
