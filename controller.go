@@ -31,9 +31,10 @@ type (
 
 	// HTTPError implements ClientError interface.
 	HTTPError struct {
-		Code   int         `json:"code"`
-		Err    string      `json:"error"`
-		Detail interface{} `json:"detail"`
+		Code      int         `json:"code"`
+		Err       string      `json:"error"`
+		Detail    interface{} `json:"detail"`
+		RequestID string      `json:"requestId;-"`
 	}
 
 	// ChiController defines the interface for an API Controller with Chi Router
@@ -75,12 +76,13 @@ func (e *HTTPError) ResponseHeaders() (int, map[string]string) {
 }
 
 // NewHTTPError returns a new HTTPError instance
-func NewHTTPError(err error, status int, detail interface{}) error {
+func NewHTTPError(err error, status int, detail interface{}, requestID string) error {
 
 	return &HTTPError{
-		Err:    err.Error(),
-		Detail: detail,
-		Code:   status,
+		Err:       err.Error(),
+		Detail:    detail,
+		Code:      status,
+		RequestID: requestID,
 	}
 }
 
