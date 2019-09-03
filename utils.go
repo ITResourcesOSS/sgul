@@ -19,7 +19,7 @@ import (
 )
 
 // Stringify converts a struct to its string representation.
-func Stringify(strct interface{}, mask []string) string {
+func Stringify(strct interface{}) string {
 	var buffer bytes.Buffer
 	buffer.WriteString("[")
 	s := structs.New(strct)
