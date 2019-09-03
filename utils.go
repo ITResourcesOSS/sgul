@@ -19,14 +19,29 @@ import (
 )
 
 // Stringify converts a struct to its string representation.
-func Stringify(strct interface{}) string {
+func Stringify(strct interface{}, mask []string) string {
 	var buffer bytes.Buffer
 	buffer.WriteString("[")
 	s := structs.New(strct)
+	var value string
 	for _, f := range s.Fields() {
-		buffer.WriteString(fmt.Sprintf(" %+v: <%+v>;", f.Name(), f.Value()))
+		value = f.Value().(string)
+		if ContainsString(mask, f.Name()) {
+			value = "**********"
+		}
+		buffer.WriteString(fmt.Sprintf(" %+v: <%+v>;", f.Name(), value))
 	}
 	buffer.WriteString(" ]")
 
 	return buffer.String()
+}
+
+// ContainsString checks if a slice of strings contains a string.
+func ContainsString(s []string, elem string) bool {
+	for _, a := range s {
+		if a == elem {
+			return true
+		}
+	}
+	return false
 }
