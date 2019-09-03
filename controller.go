@@ -34,7 +34,7 @@ type (
 		Code      int         `json:"code"`
 		Err       string      `json:"error"`
 		Detail    interface{} `json:"detail"`
-		RequestID string      `json:"requestId;-"`
+		RequestID string      `json:"requestId"`
 	}
 
 	// ChiController defines the interface for an API Controller with Chi Router
