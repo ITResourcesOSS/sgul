@@ -23,13 +23,26 @@ func Stringify(strct interface{}, mask []string) string {
 	var buffer bytes.Buffer
 	buffer.WriteString("[")
 	s := structs.New(strct)
-	var value string
 	for _, f := range s.Fields() {
-		value = f.Value().(string)
+		buffer.WriteString(fmt.Sprintf(" %+v: <%+v>;", f.Name(), f.Value()))
+	}
+	buffer.WriteString(" ]")
+
+	return buffer.String()
+}
+
+// MaskedStringify converts a struct to its string representation obfuscating values
+// for the key passed in mask slice.
+func MaskedStringify(strct interface{}, mask []string) string {
+	var buffer bytes.Buffer
+	buffer.WriteString("[")
+	s := structs.New(strct)
+	for _, f := range s.Fields() {
 		if ContainsString(mask, f.Name()) {
-			value = "**********"
+			buffer.WriteString(fmt.Sprintf(" %+v: <**********>;", f.Name()))
+		} else {
+			buffer.WriteString(fmt.Sprintf(" %+v: <%+v>;", f.Name(), f.Value()))
 		}
-		buffer.WriteString(fmt.Sprintf(" %+v: <%+v>;", f.Name(), value))
 	}
 	buffer.WriteString(" ]")
 
