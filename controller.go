@@ -15,6 +15,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi"
 )
@@ -35,6 +36,7 @@ type (
 		Err       string      `json:"error"`
 		Detail    interface{} `json:"detail"`
 		RequestID string      `json:"requestId"`
+		Timestamp time.Time   `json:"timestamp"`
 	}
 
 	// ChiController defines the interface for an API Controller with Chi Router
@@ -83,6 +85,7 @@ func NewHTTPError(err error, status int, detail interface{}, requestID string) e
 		Detail:    detail,
 		Code:      status,
 		RequestID: requestID,
+		Timestamp: time.Now(),
 	}
 }
 
