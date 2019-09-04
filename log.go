@@ -57,7 +57,7 @@ func (l Logger) wrapFormat(format string) string {
 }
 
 func (l Logger) wrapVariadic(args ...interface{}) []string {
-	return []string{fmt.Sprintf("[%s][%s] - ", l.requestID, l.module), fmt.Sprint(args...)}
+	return []string{fmt.Sprintf("[%s][%s] - %s", l.requestID, l.module, fmt.Sprint(args...))}
 }
 
 // Tracef delegates to the logrous logger Tracef.
