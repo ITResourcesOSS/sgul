@@ -24,8 +24,7 @@ const ctxPrincipalKey ctxKey = iota
 var ErrPrincipalNotInContext = errors.New("No Principal in request context")
 
 // JwtAuthenticator is the JWT authentication middleware.
-// https://github.com/ChrisTheShark/golang-jwt/blob/master/main.go
-func JwtAuthenticator() func(next http.Handler) http.Handler {
+func JwtAuthenticator(roles []string) func(next http.Handler) http.Handler {
 	conf := GetConfiguration().API.Security
 	secret := []byte(conf.Jwt.Secret)
 
@@ -53,6 +52,12 @@ func JwtAuthenticator() func(next http.Handler) http.Handler {
 			principal := Principal{
 				Username: claims["sub"].(string),
 				Role:     claims["auth"].(string),
+			}
+
+			// check roles authorization: 403 Forbidden iff check fails
+			if !ContainsString(roles, principal.Role) {
+				http.Error(w, "", http.StatusForbidden)
+				return
 			}
 
 			ctx := context.WithValue(r.Context(), ctxPrincipalKey, principal)
