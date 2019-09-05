@@ -59,8 +59,11 @@ func Pager() func(next http.Handler) http.Handler {
 
 // GetPage return the pager struct from request Context.
 func GetPage(ctx context.Context) (Page, error) {
-	if pager, ok := ctx.Value(ctxPageKey).(Page); ok {
-		return pager, nil
+	if page, ok := ctx.Value(ctxPageKey).(Page); ok {
+		fmt.Println("*** Fund Page in Context")
+		return page, nil
 	}
+
+	fmt.Println("*** No Page in context")
 	return Page{}, ErrPagerNotInContext
 }
