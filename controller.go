@@ -88,8 +88,8 @@ func NewHTTPError(err error, status int, detail interface{}, requestID string) e
 
 // Controller ------------------------------------------------------------
 
-// New return a new instance of Controller (useful in composition for api controllers).
-func New(path string, name string) Controller {
+// NewController return a new instance of Controller (useful in composition for api controllers).
+func NewController(path string, name string) Controller {
 	return Controller{Path: path}
 }
 
