@@ -53,11 +53,8 @@ type (
 
 // HTTPError ------------------------------------------------------------
 
+// Error return a formatted description of the error.
 func (e *HTTPError) Error() string {
-	// if e.Err == nil {
-	// 	return e.Message
-	// }
-	// return e.Message + " : " + e.Err.Error()
 	return fmt.Sprintf("%v : %s", e.Detail, e.Err)
 }
 
@@ -91,30 +88,17 @@ func NewHTTPError(err error, status int, detail interface{}, requestID string) e
 
 // Controller ------------------------------------------------------------
 
-// RenderError returns error to the client
-func (c *Controller) RenderError(w http.ResponseWriter, err error) {
-	RenderError(w, err)
-	// clientError, ok := err.(ClientError)
-	// if !ok {
-	// 	w.WriteHeader(http.StatusInternalServerError)
-	// 	return
-	// }
-
-	// body, err := clientError.ResponseBody()
-	// if err != nil {
-	// 	w.WriteHeader(http.StatusInternalServerError)
-	// 	return
-	// }
-
-	// status, headers := clientError.ResponseHeaders()
-	// for k, v := range headers {
-	// 	w.Header().Set(k, v)
-	// }
-	// w.WriteHeader(status)
-	// w.Write(body)
+// New return a new instance of Controller (useful in composition for api controllers).
+func New(path string, name string) Controller {
+	return Controller{Path: path}
 }
 
-// RenderError returns error to the client
+// RenderError returns error to the client.
+func (c *Controller) RenderError(w http.ResponseWriter, err error) {
+	RenderError(w, err)
+}
+
+// RenderError exported to be used in this lib (a.e. in middlewares) returns error to the client.
 func RenderError(w http.ResponseWriter, err error) {
 	clientError, ok := err.(ClientError)
 	if !ok {
