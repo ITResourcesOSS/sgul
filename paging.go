@@ -45,8 +45,9 @@ func Pager() func(next http.Handler) http.Handler {
 				page := Page{Page: pVal, Size: sVal}
 				ctx := context.WithValue(r.Context(), ctxPageKey, page)
 				next.ServeHTTP(w, r.WithContext(ctx))
+			} else {
+				next.ServeHTTP(w, r)
 			}
-			next.ServeHTTP(w, r)
 		}
 		return http.HandlerFunc(fn)
 	}
