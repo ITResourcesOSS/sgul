@@ -17,7 +17,7 @@ type Page struct {
 
 type ctxPKey int
 
-const ctxPageKey ctxPKey = iota
+const ctxPageKey ctxPKey = iota + 1
 
 // ErrPagerNotInContext is returned if there is no Pager in the request context.
 var ErrPagerNotInContext = errors.New("Pager info not in Context")
