@@ -237,6 +237,11 @@ func GetLogger() *logrus.Logger {
 	return loggerInstance
 }
 
+// GetLoggerFor return a logrus logger entry tagged with field "module".
+func GetLoggerFor(module string) *logrus.Entry {
+	return GetLogger().WithField("module", module)
+}
+
 func parseLevel(conf Log) logrus.Level {
 	var logLevel logrus.Level
 
