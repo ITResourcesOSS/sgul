@@ -23,8 +23,8 @@ const ctxPrincipalKey ctxKey = iota
 // ErrPrincipalNotInContext is returned if there is no Principal in the request context.
 var ErrPrincipalNotInContext = errors.New("No Principal in request context")
 
-// JwtAuthenticator is the JWT authentication middleware.
-func JwtAuthenticator(roles []string) func(next http.Handler) http.Handler {
+// JWTAuthorizer is the JWT authentication middleware.
+func JWTAuthorizer(roles []string) func(next http.Handler) http.Handler {
 	conf := GetConfiguration().API.Security
 	secret := []byte(conf.Jwt.Secret)
 
