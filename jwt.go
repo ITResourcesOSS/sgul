@@ -28,7 +28,7 @@ func JWTAuthorizer(roles []string) func(next http.Handler) http.Handler {
 	conf := GetConfiguration().API.Security
 	secret := []byte(conf.Jwt.Secret)
 
-	jwtAuthenticator := func(next http.Handler) http.Handler {
+	jwtAuthorizer := func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			authorization := r.Header.Get("Authorization")
 			trimmedAuth := strings.Fields(authorization)
@@ -66,7 +66,7 @@ func JWTAuthorizer(roles []string) func(next http.Handler) http.Handler {
 
 		return http.HandlerFunc(fn)
 	}
-	return jwtAuthenticator
+	return jwtAuthorizer
 }
 
 // GetPrincipal return the user authenticated Princiapl information from the request context.
