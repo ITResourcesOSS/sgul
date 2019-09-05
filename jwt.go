@@ -3,7 +3,6 @@ package sgul
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -55,8 +54,6 @@ func JwtAuthenticator() func(next http.Handler) http.Handler {
 				Username: claims["sub"].(string),
 				Role:     claims["auth"].(string),
 			}
-
-			fmt.Printf("PRINCIPAL.Username: %s, PRINCIPAL.Role: %s", principal.Username, principal.Role)
 
 			ctx := context.WithValue(r.Context(), ctxPrincipalKey, principal)
 			next.ServeHTTP(w, r.WithContext(ctx))
