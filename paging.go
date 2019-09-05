@@ -3,8 +3,10 @@ package sgul
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
+	"strconv"
+
+	"github.com/go-chi/chi/middleware"
 )
 
 // Page defines the struct with paging info to send into the request context.
@@ -24,18 +26,27 @@ var ErrPagerNotInContext = errors.New("Pager info not in Context")
 func Pager() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
-			page := r.URL.Query().Get("page")
-			size := r.URL.Query().Get("size")
-			if page == "" {
-				fmt.Println("page empty")
-			} else {
-				fmt.Printf("page: %s", page)
+			p := r.URL.Query().Get("page")
+			s := r.URL.Query().Get("size")
+			if p != "" && s != "" {
+				var pVal int
+				var sVal int
+				var err error
+				pVal, err = strconv.Atoi(p)
+				if err != nil {
+					RenderError(w, NewHTTPError(err, http.StatusBadRequest, "Malformed 'page' param", middleware.GetReqID(r.Context())))
+					return
+				}
+				sVal, err = strconv.Atoi(s)
+				if err != nil {
+					RenderError(w, NewHTTPError(err, http.StatusBadRequest, "Malformed 'size' param", middleware.GetReqID(r.Context())))
+					return
+				}
+				page := Page{Page: pVal, Size: sVal}
+				ctx := context.WithValue(r.Context(), ctxPageKey, page)
+				next.ServeHTTP(w, r.WithContext(ctx))
 			}
-			if size == "" {
-				fmt.Println("page empty")
-			} else {
-				fmt.Printf("size: %s", size)
-			}
+			next.ServeHTTP(w, r)
 		}
 		return http.HandlerFunc(fn)
 	}

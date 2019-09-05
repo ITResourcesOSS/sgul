@@ -93,6 +93,29 @@ func NewHTTPError(err error, status int, detail interface{}, requestID string) e
 
 // RenderError returns error to the client
 func (c *Controller) RenderError(w http.ResponseWriter, err error) {
+	RenderError(w, err)
+	// clientError, ok := err.(ClientError)
+	// if !ok {
+	// 	w.WriteHeader(http.StatusInternalServerError)
+	// 	return
+	// }
+
+	// body, err := clientError.ResponseBody()
+	// if err != nil {
+	// 	w.WriteHeader(http.StatusInternalServerError)
+	// 	return
+	// }
+
+	// status, headers := clientError.ResponseHeaders()
+	// for k, v := range headers {
+	// 	w.Header().Set(k, v)
+	// }
+	// w.WriteHeader(status)
+	// w.Write(body)
+}
+
+// RenderError returns error to the client
+func RenderError(w http.ResponseWriter, err error) {
 	clientError, ok := err.(ClientError)
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
