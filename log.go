@@ -52,11 +52,15 @@ func GetLogger() *zap.Logger {
 
 		if env == "prod" || env == "production" {
 			writerSyncer = getLogWriter(conf)
-			encoder = zapcore.NewJSONEncoder(getEncoderConfig())
 		} else {
 			writerSyncer = zapcore.NewMultiWriteSyncer(
 				zapcore.AddSync(os.Stdout),
 				getLogWriter(conf))
+		}
+
+		if conf.JSON {
+			encoder = zapcore.NewJSONEncoder(getEncoderConfig())
+		} else {
 			encoder = zapcore.NewConsoleEncoder(getEncoderConfig())
 		}
 
