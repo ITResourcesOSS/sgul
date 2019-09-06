@@ -56,23 +56,15 @@ type (
 	// If not present, the Machinery will use a default logger provided
 	// by the "gm-log" package.
 	Log struct {
-		Path     string
-		Filename string
-		Console  struct {
-			Enabled       bool
-			DisableColors bool
-			Colors        bool
-		}
-		Level           string
-		JSON            bool
-		MaxSize         int
-		MaxBackups      int
-		MaxAge          int
-		Compress        bool
-		LocalTime       bool
-		TimestampFormat string
-		FullTimestamp   bool
-		ForceFormatting bool
+		Path       string
+		Filename   string
+		Console    bool
+		Level      string
+		JSON       bool
+		MaxSize    int
+		MaxBackups int
+		MaxAge     int
+		Compress   bool
 	}
 
 	// API is the structure for the Http API server and app configuration.

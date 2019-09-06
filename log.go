@@ -9,7 +9,6 @@
 package sgul
 
 import (
-	"fmt"
 	"os"
 	"path"
 	"sync"
@@ -22,26 +21,6 @@ import (
 var onceLogger sync.Once
 var logger *zap.Logger
 
-/*
-Log struct {
-		Path     string
-		Filename string
-		Console  struct {
-			Enabled       bool
-			DisableColors bool
-			Colors        bool
-		}
-		Level           string
-		JSON            bool
-		MaxSize         int
-		MaxBackups      int
-		MaxAge          int
-		Compress        bool
-		LocalTime       bool
-		TimestampFormat string
-		FullTimestamp   bool
-		ForceFormatting bool
-	}*/
 // GetLogger .
 func GetLogger() *zap.Logger {
 	onceLogger.Do(func() {
@@ -50,7 +29,7 @@ func GetLogger() *zap.Logger {
 		var writerSyncer zapcore.WriteSyncer
 		var encoder zapcore.Encoder
 
-		if env == "prod" || env == "production" {
+		if (env == "prod" || env == "production") && !conf.Console {
 			writerSyncer = getLogWriter(conf)
 		} else {
 			writerSyncer = zapcore.NewMultiWriteSyncer(
@@ -66,11 +45,8 @@ func GetLogger() *zap.Logger {
 
 		lgLvl := zapcore.InfoLevel
 		if err := (*zapcore.Level).UnmarshalText(&lgLvl, []byte(conf.Level)); err != nil {
-			fmt.Printf("---------> error: %+v", err)
 			lgLvl = zapcore.InfoLevel
 		}
-		ml, _ := lgLvl.MarshalText()
-		fmt.Printf("---------> log level: %s", string(ml))
 
 		core := zapcore.NewCore(encoder, writerSyncer, lgLvl)
 		logger = zap.New(core, zap.AddCaller())
@@ -78,13 +54,6 @@ func GetLogger() *zap.Logger {
 
 	return logger
 }
-
-// func getEncoder() zapcore.Encoder {
-// 	encoderConfig := zap.NewProductionEncoderConfig()
-// 	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-// 	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
-// 	return zapcore.NewConsoleEncoder(encoderConfig)
-// }
 
 func getEncoderConfig() zapcore.EncoderConfig {
 	encoderConfig := zap.NewProductionEncoderConfig()
