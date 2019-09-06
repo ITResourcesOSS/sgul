@@ -14,6 +14,7 @@ require (
 	github.com/sirupsen/logrus v1.2.0
 	github.com/snowzach/rotatefilehook v0.0.0-20180327172521-2f64f265f58c
 	github.com/spf13/viper v1.4.0
+	github.com/streadway/amqp v0.0.0-20190827072141-edfb9018d271
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	go.uber.org/zap v1.10.0
 	golang.org/x/crypto v0.0.0-20190829043050-9756ffdc2472 // indirect

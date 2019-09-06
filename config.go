@@ -101,6 +101,17 @@ type (
 		Attributes  []string
 	}
 
+	// AMQP configuration
+	AMQP struct {
+		User     string
+		Password string
+		Host     string
+		Port     int
+		VHost    string
+		Exchange string
+		Queue    string
+	}
+
 	// Configuration describe the type for the configuration file
 	Configuration struct {
 		Service    Service
@@ -109,6 +120,7 @@ type (
 		Management Management
 		Log        Log
 		Ldap       Ldap
+		AMQP       AMQP
 	}
 )
 
