@@ -9,6 +9,9 @@
 package sgul
 
 import (
+	"fmt"
+	"os"
+	"path"
 	"sync"
 
 	"github.com/natefinch/lumberjack"
@@ -19,33 +22,80 @@ import (
 var onceLogger sync.Once
 var logger *zap.Logger
 
+/*
+Log struct {
+		Path     string
+		Filename string
+		Console  struct {
+			Enabled       bool
+			DisableColors bool
+			Colors        bool
+		}
+		Level           string
+		JSON            bool
+		MaxSize         int
+		MaxBackups      int
+		MaxAge          int
+		Compress        bool
+		LocalTime       bool
+		TimestampFormat string
+		FullTimestamp   bool
+		ForceFormatting bool
+	}*/
 // GetLogger .
 func GetLogger() *zap.Logger {
 	onceLogger.Do(func() {
-		writerSyncer := getLogWriter()
-		//writerSyncer := zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), getLogWriter())
-		encoder := getEncoder()
-		core := zapcore.NewCore(encoder, writerSyncer, zapcore.DebugLevel)
+		conf := GetConfiguration().Log
+		env := os.Getenv("ENV")
+		var writerSyncer zapcore.WriteSyncer
+		var encoder zapcore.Encoder
+
+		if env == "prod" || env == "production" {
+			writerSyncer = getLogWriter(conf)
+			encoder = zapcore.NewJSONEncoder(getEncoderConfig())
+		} else {
+			writerSyncer = zapcore.NewMultiWriteSyncer(
+				zapcore.AddSync(os.Stdout),
+				getLogWriter(conf))
+			encoder = zapcore.NewConsoleEncoder(getEncoderConfig())
+		}
+
+		lgLvl := zapcore.InfoLevel
+		if err := (*zapcore.Level).UnmarshalText(&lgLvl, []byte(conf.Level)); err != nil {
+			fmt.Printf("---------> error: %+v", err)
+			lgLvl = zapcore.InfoLevel
+		}
+		ml, _ := lgLvl.MarshalText()
+		fmt.Printf("---------> log level: %s", string(ml))
+
+		core := zapcore.NewCore(encoder, writerSyncer, lgLvl)
 		logger = zap.New(core, zap.AddCaller())
 	})
 
 	return logger
 }
 
-func getEncoder() zapcore.Encoder {
+// func getEncoder() zapcore.Encoder {
+// 	encoderConfig := zap.NewProductionEncoderConfig()
+// 	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+// 	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
+// 	return zapcore.NewConsoleEncoder(encoderConfig)
+// }
+
+func getEncoderConfig() zapcore.EncoderConfig {
 	encoderConfig := zap.NewProductionEncoderConfig()
 	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
-	return zapcore.NewConsoleEncoder(encoderConfig)
+	return encoderConfig
 }
 
-func getLogWriter() zapcore.WriteSyncer {
+func getLogWriter(conf Log) zapcore.WriteSyncer {
 	lumberJackLogger := &lumberjack.Logger{
-		Filename:   "./logs/test.log",
-		MaxSize:    10,
-		MaxBackups: 5,
-		MaxAge:     30,
-		Compress:   false,
+		Filename:   path.Join(conf.Path, conf.Filename),
+		MaxSize:    conf.MaxSize,
+		MaxBackups: conf.MaxBackups,
+		MaxAge:     conf.MaxAge,
+		Compress:   conf.Compress,
 	}
 	return zapcore.AddSync(lumberJackLogger)
 }
