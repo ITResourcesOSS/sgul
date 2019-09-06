@@ -17,19 +17,18 @@ import (
 )
 
 var onceLogger sync.Once
-var loggerInstance *zap.SugaredLogger
+var logger *zap.Logger
 
 // GetLogger .
-func GetLogger() *zap.SugaredLogger {
+func GetLogger() *zap.Logger {
 	onceLogger.Do(func() {
 		writerSyncer := getLogWriter()
 		encoder := getEncoder()
 		core := zapcore.NewCore(encoder, writerSyncer, zapcore.DebugLevel)
-		logger := zap.New(core, zap.AddCaller())
-		loggerInstance = logger.Sugar()
+		logger = zap.New(core, zap.AddCaller())
 	})
 
-	return loggerInstance
+	return logger
 }
 
 func getEncoder() zapcore.Encoder {
