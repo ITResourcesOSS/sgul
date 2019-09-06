@@ -9,6 +9,7 @@
 package sgul
 
 import (
+	"os"
 	"sync"
 
 	"github.com/natefinch/lumberjack"
@@ -22,7 +23,8 @@ var logger *zap.Logger
 // GetLogger .
 func GetLogger() *zap.Logger {
 	onceLogger.Do(func() {
-		writerSyncer := getLogWriter()
+		//writerSyncer := getLogWriter()
+		writerSyncer := zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), getLogWriter())
 		encoder := getEncoder()
 		core := zapcore.NewCore(encoder, writerSyncer, zapcore.DebugLevel)
 		logger = zap.New(core, zap.AddCaller())
@@ -47,7 +49,6 @@ func getLogWriter() zapcore.WriteSyncer {
 		Compress:   false,
 	}
 	return zapcore.AddSync(lumberJackLogger)
-
 }
 
 // import (
