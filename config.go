@@ -65,6 +65,7 @@ type (
 		MaxBackups int
 		MaxAge     int
 		Compress   bool
+		Caller     bool
 	}
 
 	// API is the structure for the Http API server and app configuration.

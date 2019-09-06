@@ -49,7 +49,13 @@ func GetLogger() *zap.Logger {
 		}
 
 		core := zapcore.NewCore(encoder, writerSyncer, lgLvl)
-		logger = zap.New(core, zap.AddCaller())
+
+		if conf.Caller {
+			logger = zap.New(core, zap.AddCaller())
+		} else {
+			logger = zap.New(core)
+		}
+
 	})
 
 	return logger
