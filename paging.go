@@ -49,36 +49,16 @@ func pager(next http.Handler) http.HandlerFunc {
 	}
 }
 
-// Pager is the query paging middleware
+// Pager is the query paging middleware.
 func Pager() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(pager(next))
-		// fn := func(w http.ResponseWriter, r *http.Request) {
-		// 	p := r.URL.Query().Get("page")
-		// 	s := r.URL.Query().Get("size")
-		// 	if p != "" && s != "" {
-		// 		var pVal int
-		// 		var sVal int
-		// 		var err error
-		// 		pVal, err = strconv.Atoi(p)
-		// 		if err != nil {
-		// 			RenderError(w, NewHTTPError(err, http.StatusBadRequest, "Malformed 'page' param", middleware.GetReqID(r.Context())))
-		// 			return
-		// 		}
-		// 		sVal, err = strconv.Atoi(s)
-		// 		if err != nil {
-		// 			RenderError(w, NewHTTPError(err, http.StatusBadRequest, "Malformed 'size' param", middleware.GetReqID(r.Context())))
-		// 			return
-		// 		}
-		// 		page := Page{Page: pVal, Size: sVal}
-		// 		ctx := context.WithValue(r.Context(), ctxPageKey, page)
-		// 		next.ServeHTTP(w, r.WithContext(ctx))
-		// 	} else {
-		// 		next.ServeHTTP(w, r)
-		// 	}
-		// }
-		// return http.HandlerFunc(fn)
 	}
+}
+
+// RoutePager is the query paging middleware to be used on routes.
+func RoutePager(next http.HandlerFunc) http.HandlerFunc {
+	return pager(next)
 }
 
 // GetPage return the pager struct from request Context.
@@ -88,19 +68,4 @@ func GetPage(ctx context.Context) (Page, error) {
 	}
 
 	return Page{}, ErrPagerNotInContext
-}
-
-/*
-// JWTRouteAuthorizer is the JWT authentication middleware to use on single route (a.e. Chi router get, post, ...).
-func JWTRouteAuthorizer(roles []string) func(next http.HandlerFunc) http.HandlerFunc {
-	return func(next http.HandlerFunc) http.HandlerFunc {
-		return jwtAuthorize(roles, next)
-	}
-
-}
-*/
-
-// RoutePager .
-func RoutePager(next http.HandlerFunc) http.HandlerFunc {
-	return pager(next)
 }
