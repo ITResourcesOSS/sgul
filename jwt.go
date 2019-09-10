@@ -76,3 +76,47 @@ func GetPrincipal(ctx context.Context) (Principal, error) {
 	}
 	return Principal{}, ErrPrincipalNotInContext
 }
+
+// JWTAuthorizer2 .
+func JWTAuthorizer2(roles []string) func(next http.HandlerFunc) http.HandlerFunc {
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			conf := GetConfiguration().API.Security
+			secret := []byte(conf.Jwt.Secret)
+			authorization := r.Header.Get("Authorization")
+			trimmedAuth := strings.Fields(authorization)
+
+			// Trim out Bearer from Authorization Header
+			if authorization == "" || len(trimmedAuth) == 0 {
+				http.Error(w, "", http.StatusUnauthorized)
+				return
+			}
+
+			claims := jwt.MapClaims{}
+			_, err := jwt.ParseWithClaims(trimmedAuth[1], claims,
+				func(token *jwt.Token) (interface{}, error) {
+					return secret, nil
+				})
+			if err != nil {
+				http.Error(w, "", http.StatusUnauthorized)
+				return
+			}
+
+			principal := Principal{
+				Username: claims["sub"].(string),
+				Role:     claims["auth"].(string),
+			}
+
+			// check roles authorization: 403 Forbidden iff check fails
+			if !ContainsString(roles, principal.Role) {
+				http.Error(w, "", http.StatusForbidden)
+				return
+			}
+
+			ctx := context.WithValue(r.Context(), ctxPrincipalKey, principal)
+			//next.ServeHTTP(w, r.WithContext(ctx))
+			next(w, r.WithContext(ctx))
+		}
+	}
+
+}
