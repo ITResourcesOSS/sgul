@@ -160,6 +160,31 @@ func loadConfiguration() {
 
 }
 
+// LoadConfiguration reads the configuration file according to the ENV var
+// and return unmarshalled struct.
+func LoadConfiguration(configStruct interface{}) {
+	viper.SetDefault("logPath", "./log")
+
+	viper.AddConfigPath(".")
+	viper.AddConfigPath("./config")
+
+	if os.Getenv("ENV") != "" {
+		viper.SetConfigName("config-" + os.Getenv("ENV"))
+	} else {
+		viper.SetConfigName("config")
+	}
+
+	viper.SetConfigType("yaml")
+
+	if err := viper.ReadInConfig(); err != nil {
+		panic(fmt.Errorf("fatal error config file: %s", err))
+	}
+
+	if err := viper.Unmarshal(&configStruct); err != nil {
+		panic(fmt.Errorf("fatal error decoding configuration into struct: %v", err))
+	}
+}
+
 // Get returns a configuration map by key. Used for custom or gear configurations.
 func Get(key string) interface{} {
 	// just in case!
