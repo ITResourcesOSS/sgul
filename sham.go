@@ -8,6 +8,8 @@ import (
 	"net"
 	"net/http"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 // ErrFailedDiscoveryRequest is returned when a discovery request fails.
@@ -49,6 +51,7 @@ type ShamClient struct {
 	targetsCache []string
 	// discovery    *DiscoveryClient
 	serviceRegistry ServiceRegistry
+	logger          *zap.SugaredLogger
 }
 
 var defaultClientConfiguration = Client{
@@ -58,7 +61,7 @@ var defaultClientConfiguration = Client{
 	ExpectContinueTimeout: 4 * time.Second,
 	ResponseHeaderTimeout: 10 * time.Second,
 	Balancing:             BalancingStrategy{Strategy: RoundRobinStrategy},
-	ServiceRegistry:       ServiceRegistry{Type: "sgulreg", URL: "http://localhost:9687/sgulreg"},
+	ServiceRegistry:       ServiceRegistry{Type: "sgulreg", URL: "http://localhost:9687/sgulreg/services"},
 }
 
 func clientConfiguration() Client {
@@ -101,19 +104,24 @@ func NewShamClient(serviceName string, apiPath string) *ShamClient {
 		targetsCache: make([]string, 0),
 		// discovery:    NewDiscoveryClient(clientConfe),
 		serviceRegistry: clientConf.ServiceRegistry,
+		logger:          GetLogger().Sugar(),
 	}
 }
 
+// Discover .
 func (sc *ShamClient) Discover() ([]string, error) {
+	sc.logger.Infof("discovering endpoints for service %s", sc.serviceName)
 	endpoints := []string{}
 	response, err := sc.httpClient.Get(sc.serviceRegistry.URL + "/" + sc.serviceName)
 	if err != nil {
+		sc.logger.Errorf("Error making service discovery HTTP request: %s", err)
 		return endpoints, ErrFailedDiscoveryRequest
 	}
-	fmt.Println("Response: Content-length:", response.Header.Get("Content-length"))
+	sc.logger.Debugf("discovery response content-length: %s", response.Header.Get("Content-length"))
 
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
+		sc.logger.Errorf("Error reading service discovery HTTP response body: %s", err)
 		return endpoints, ErrFailedDiscoveryResponseBody
 	}
 	defer response.Body.Close()
@@ -126,5 +134,6 @@ func (sc *ShamClient) Discover() ([]string, error) {
 		endpoints = append(endpoints, endpoint)
 	}
 
+	sc.logger.Infof("service %s endpoints: %+v", sc.serviceName, endpoints)
 	return endpoints, nil
 }
