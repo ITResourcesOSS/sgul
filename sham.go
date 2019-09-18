@@ -91,7 +91,7 @@ func (sc *ShamClient) watchRegistry() {
 
 // Discover .
 func (sc *ShamClient) discover() error {
-	sc.logger.Infof("discovering endpoints for service %s", sc.serviceName)
+	sc.logger.Debugf("discovering endpoints for service %s", sc.serviceName)
 	// endpoints := []string{}
 	response, err := sc.httpClient.Get(sc.serviceRegistry.URL + "/sgulreg/services/" + sc.serviceName)
 	if err != nil {
@@ -119,6 +119,6 @@ func (sc *ShamClient) discover() error {
 
 	sc.targetsCache = MergeStringSlices(endpoints, sc.targetsCache)
 
-	sc.logger.Debugf("discovered service %s endpoints: %+v", sc.serviceName, sc.targetsCache)
+	sc.logger.Infof("discovered service %s endpoints: %+v", sc.serviceName, sc.targetsCache)
 	return nil
 }
