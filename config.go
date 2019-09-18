@@ -88,11 +88,22 @@ type (
 	}
 
 	// ServiceRegistry is the endpoint configuration for the
-	// service registry used for service discovery by this client.
+	// service registry used for service discovery by an http client.
 	// Actually only Type="sgulreg" is managed.
 	ServiceRegistry struct {
+		// Type specify the service registry type. Actually only "sgulreg" is managed.
 		Type string
-		URL  string
+		// URL is the http url for the service registry.
+		// For a SuglREG registry it is in the form of http://<host>:<port>.
+		// This URL must be without trailing slash.
+		URL string
+		// Fallback is the fallback service registry used in case of the service registry
+		// does not respond at the client startup or respond with and empty list, so we have an
+		// empty local registry.
+		// So, if the client local registry is empty and the service registry is not reachable
+		// at the client startup, the client will use this fallback endpoints list to balance
+		// client requests.
+		Fallback []string
 	}
 
 	// BalancingStrategy defines the load balancing strategy.
