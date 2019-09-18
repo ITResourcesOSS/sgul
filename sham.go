@@ -39,7 +39,11 @@ var defaultClientConfiguration = Client{
 	ExpectContinueTimeout: 4 * time.Second,
 	ResponseHeaderTimeout: 10 * time.Second,
 	Balancing:             BalancingStrategy{Strategy: RoundRobinStrategy},
-	ServiceRegistry:       ServiceRegistry{Type: "sgulreg", URL: "http://localhost:9687"},
+	ServiceRegistry: ServiceRegistry{
+		Type:     "sgulreg",
+		URL:      "http://localhost:9687",
+		Fallback: []string{},
+	},
 }
 
 func clientConfiguration() Client {
@@ -95,6 +99,7 @@ func (sc *ShamClient) discover() error {
 	// endpoints := []string{}
 	response, err := sc.httpClient.Get(sc.serviceRegistry.URL + "/sgulreg/services/" + sc.serviceName)
 	if err != nil {
+		sc.targetsCache = sc.serviceRegistry.Fallback
 		sc.logger.Errorf("Error making service discovery HTTP request: %s", err)
 		return ErrFailedDiscoveryRequest
 	}
@@ -102,6 +107,7 @@ func (sc *ShamClient) discover() error {
 
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
+		sc.targetsCache = sc.serviceRegistry.Fallback
 		sc.logger.Errorf("Error reading service discovery HTTP response body: %s", err)
 		return ErrFailedDiscoveryResponseBody
 	}
@@ -110,14 +116,20 @@ func (sc *ShamClient) discover() error {
 	var serviceInfo sgulreg.ServiceInfoResponse
 	json.Unmarshal([]byte(body), &serviceInfo)
 
-	var endpoints []string
-	for _, instance := range serviceInfo.Instances {
-		sc.logger.Debugf("discovered service %s endpoint serviceID: %s", sc.serviceName, instance.InstanceID)
-		endpoint := fmt.Sprintf("%s://%s%s", instance.Schema, instance.Host, sc.apiPath)
-		endpoints = append(endpoints, endpoint)
+	if len(serviceInfo.Instances) > 0 {
+		var endpoints []string
+		for _, instance := range serviceInfo.Instances {
+			sc.logger.Debugf("discovered service %s endpoint serviceID: %s", sc.serviceName, instance.InstanceID)
+			endpoint := fmt.Sprintf("%s://%s%s", instance.Schema, instance.Host, sc.apiPath)
+			endpoints = append(endpoints, endpoint)
+		}
+
+		sc.targetsCache = MergeStringSlices(endpoints, sc.targetsCache)
 	}
 
-	sc.targetsCache = MergeStringSlices(endpoints, sc.targetsCache)
+	if len(sc.targetsCache) == 0 {
+		sc.targetsCache = sc.serviceRegistry.Fallback
+	}
 
 	sc.logger.Infof("discovered service %s endpoints: %+v", sc.serviceName, sc.targetsCache)
 	return nil
