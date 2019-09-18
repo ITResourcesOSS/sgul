@@ -17,13 +17,6 @@ import (
 )
 
 type (
-	// Bootstrap defines configuration structure for the very initial service configuration.
-	Bootstrap struct {
-		ServiceRegistry struct {
-			Type string
-			URL  string
-		}
-	}
 	// Service is the structure for the service information configuration.
 	Service struct {
 		Group   string
@@ -90,6 +83,50 @@ type (
 					Minutes int32
 				}
 			}
+		}
+	}
+
+	// Client defines configuration structure for Http (API) clients.
+	Client struct {
+		// Timeout specifies a time limit for requests made by this
+		// Client. The timeout includes connection time, any
+		// redirects, and reading the response body. The timer remains
+		// running after Get, Head, Post, or Do return and will
+		// interrupt reading of the Response.Body.
+		// A Timeout of zero means no timeout.
+		Timeout int
+
+		// Timeout is the maximum amount of time a dial will wait for
+		// a connect to complete. If Deadline is also set, it may fail
+		// earlier.
+		// The default is no timeout.
+		DialerTimeout int
+
+		// TLSHandshakeTimeout specifies the maximum amount of time waiting to
+		// wait for a TLS handshake. Zero means no timeout.
+		TLSHandshakeTimeout int
+
+		// ExpectContinueTimeout, if non-zero, specifies the amount of
+		// time to wait for a server's first response headers after fully
+		// writing the request headers if the request has an
+		// "Expect: 100-continue" header. Zero means no timeout and
+		// causes the body to be sent immediately, without
+		// waiting for the server to approve.
+		// This time does not include the time to send the request header.
+		ExpectContinueTimeout int
+
+		// ResponseHeaderTimeout, if non-zero, specifies the amount of
+		// time to wait for a server's response headers after fully
+		// writing the request (including its body, if any). This
+		// time does not include the time to read the response body.
+		ResponseHeaderTimeout int
+
+		// ServiceRegistry is the endpoint configuration for the
+		// service registry used for service discovery by this client.
+		// Actually only Type="sgulreg" is managed.
+		ServiceRegistry struct {
+			Type string
+			URL  string
 		}
 	}
 
