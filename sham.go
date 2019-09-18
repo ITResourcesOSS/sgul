@@ -96,7 +96,7 @@ func httpClient(conf Client) *http.Client {
 // NewShamClient returns a new Sham client instance bounded to a service.
 func NewShamClient(serviceName string, apiPath string) *ShamClient {
 	clientConf := clientConfiguration()
-	return &ShamClient{
+	sham := &ShamClient{
 		serviceName:  serviceName,
 		apiPath:      apiPath,
 		httpClient:   httpClient(clientConf),
@@ -106,6 +106,8 @@ func NewShamClient(serviceName string, apiPath string) *ShamClient {
 		serviceRegistry: clientConf.ServiceRegistry,
 		logger:          GetLogger().Sugar(),
 	}
+	sham.targetsCache, _ = sham.Discover()
+	return sham
 }
 
 // Discover .
