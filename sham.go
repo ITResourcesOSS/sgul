@@ -39,7 +39,7 @@ var defaultClientConfiguration = Client{
 	ExpectContinueTimeout: 4 * time.Second,
 	ResponseHeaderTimeout: 10 * time.Second,
 	Balancing:             BalancingStrategy{Strategy: RoundRobinStrategy},
-	ServiceRegistry:       ServiceRegistry{Type: "sgulreg", URL: "http://localhost:9687/sgulreg/services"},
+	ServiceRegistry:       ServiceRegistry{Type: "sgulreg", URL: "http://localhost:9687"},
 }
 
 func clientConfiguration() Client {
@@ -88,7 +88,7 @@ func NewShamClient(serviceName string, apiPath string) *ShamClient {
 func (sc *ShamClient) discover() error {
 	sc.logger.Infof("discovering endpoints for service %s", sc.serviceName)
 	// endpoints := []string{}
-	response, err := sc.httpClient.Get(sc.serviceRegistry.URL + "/" + sc.serviceName)
+	response, err := sc.httpClient.Get(sc.serviceRegistry.URL + "/sgulreg/services/" + sc.serviceName)
 	if err != nil {
 		sc.logger.Errorf("Error making service discovery HTTP request: %s", err)
 		return ErrFailedDiscoveryRequest
@@ -116,7 +116,7 @@ func (sc *ShamClient) discover() error {
 }
 
 func (sc *ShamClient) pingServiceRegistry() (int, error) {
-	req, err := http.NewRequest("HEAD", sc.serviceRegistry.URL, nil)
+	req, err := http.NewRequest("GET", sc.serviceRegistry.URL, nil)
 	if err != nil {
 		return 0, err
 	}
