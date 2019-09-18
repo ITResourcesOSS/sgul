@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ITResourcesOSS/sgul/sgulreg"
+
 	"go.uber.org/zap"
 )
 
@@ -18,38 +20,14 @@ var ErrFailedDiscoveryRequest = errors.New("Error making service discovery HTTP 
 // ErrFailedDiscoveryResponseBody is returned if the discovery client is unable to read http response body.
 var ErrFailedDiscoveryResponseBody = errors.New("Error reading service discovery HTTP response body")
 
-// DiscoveryClient defines the struct for the Sham internal service Discovery client
-type DiscoveryClient struct {
-	serviceRegistry ServiceRegistry
-	httpClient      *http.Client
-}
-
-// ServiceInstanceInfo .
-type ServiceInstanceInfo struct {
-	InstanceID            string    `json:"instanceId"`
-	Host                  string    `json:"host"`
-	Schema                string    `json:"schema"`
-	InfoURL               string    `json:"infoUrl"`
-	HealthCheckURL        string    `json:"healthCheckUrl"`
-	RegistrationTimestamp time.Time `json:"registrationTimestamp"`
-	LastRefreshTimestamp  time.Time `json:"lastRefreshTimestamp"`
-}
-
-// ServiceInfoResponse .
-type ServiceInfoResponse struct {
-	Name      string                `json:"name"`
-	Instances []ServiceInstanceInfo `json:"instances"`
-}
-
 // ShamClient defines the struct for a sham client to an http endpoint.
 // The sham client is bound to an http service by its unique system discoverable name.
 type ShamClient struct {
-	serviceName  string
-	apiPath      string
-	httpClient   *http.Client
-	balancer     Balancer
-	TargetsCache []string
-	// discovery    *DiscoveryClient
+	serviceName     string
+	apiPath         string
+	httpClient      *http.Client
+	balancer        Balancer
+	TargetsCache    []string
 	serviceRegistry ServiceRegistry
 	logger          *zap.SugaredLogger
 }
@@ -85,28 +63,18 @@ func httpClient(conf Client) *http.Client {
 	}
 }
 
-// // NewDiscoveryClient returns a new instance of Discovery Client.
-// func NewDiscoveryClient(conf Client) *DiscoveryClient {
-// 	return &DiscoveryClient{
-// 		serviceRegistry: conf.ServiceRegistry,
-// 		httpClient:      httpClient(conf),
-// 	}
-// }
-
 // NewShamClient returns a new Sham client instance bounded to a service.
 func NewShamClient(serviceName string, apiPath string) *ShamClient {
 	clientConf := clientConfiguration()
 	sham := &ShamClient{
-		serviceName:  serviceName,
-		apiPath:      apiPath,
-		httpClient:   httpClient(clientConf),
-		balancer:     BalancerFor(clientConf.Balancing.Strategy),
-		TargetsCache: make([]string, 0),
-		// discovery:    NewDiscoveryClient(clientConfe),
+		serviceName:     serviceName,
+		apiPath:         apiPath,
+		httpClient:      httpClient(clientConf),
+		balancer:        BalancerFor(clientConf.Balancing.Strategy),
+		TargetsCache:    make([]string, 0),
 		serviceRegistry: clientConf.ServiceRegistry,
 		logger:          GetLogger().Sugar(),
 	}
-	// sham.TargetsCache, _ = sham.Discover()
 	sham.discover()
 	return sham
 }
@@ -129,7 +97,7 @@ func (sc *ShamClient) discover() error {
 	}
 	defer response.Body.Close()
 
-	var serviceInfo ServiceInfoResponse
+	var serviceInfo sgulreg.ServiceInfoResponse
 	json.Unmarshal([]byte(body), &serviceInfo)
 
 	for _, instance := range serviceInfo.Instances {
