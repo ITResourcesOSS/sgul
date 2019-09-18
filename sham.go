@@ -112,13 +112,13 @@ func (sc *ShamClient) discover() error {
 
 	var endpoints []string
 	for _, instance := range serviceInfo.Instances {
-		sc.logger.Infof("discovered service %s endpoint serviceID: %s", sc.serviceName, instance.InstanceID)
+		sc.logger.Debugf("discovered service %s endpoint serviceID: %s", sc.serviceName, instance.InstanceID)
 		endpoint := fmt.Sprintf("%s://%s%s", instance.Schema, instance.Host, sc.apiPath)
 		endpoints = append(endpoints, endpoint)
 	}
 
 	sc.targetsCache = MergeStringSlices(endpoints, sc.targetsCache)
 
-	sc.logger.Infof("discovered service %s endpoints: %+v", sc.serviceName, sc.targetsCache)
+	sc.logger.Debugf("discovered service %s endpoints: %+v", sc.serviceName, sc.targetsCache)
 	return nil
 }
