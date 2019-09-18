@@ -78,16 +78,13 @@ func NewShamClient(serviceName string, apiPath string) *ShamClient {
 		watchRegistry:   make(chan []string),
 	}
 
-	go func() {
-
-	}()
 	// ping, err := sham.pingServiceRegistry()
 	// if err != nil {
 	// 	sham.logger.Errorf("service registry ping error: %s", err)
 	// }
 	// sham.logger.Debugf("service registry ping status code: %d", ping)
 	sham.discover()
-	sham.watachRegistry()
+	go sham.watachRegistry()
 	return sham
 }
 
