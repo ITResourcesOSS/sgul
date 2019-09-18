@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -86,6 +87,19 @@ type (
 		}
 	}
 
+	// ServiceRegistry is the endpoint configuration for the
+	// service registry used for service discovery by this client.
+	// Actually only Type="sgulreg" is managed.
+	ServiceRegistry struct {
+		Type string
+		URL  string
+	}
+
+	// BalancingStrategy defines the load balancing strategy.
+	BalancingStrategy struct {
+		Strategy string
+	}
+
 	// Client defines configuration structure for Http (API) clients.
 	Client struct {
 		// Timeout specifies a time limit for requests made by this
@@ -94,17 +108,17 @@ type (
 		// running after Get, Head, Post, or Do return and will
 		// interrupt reading of the Response.Body.
 		// A Timeout of zero means no timeout.
-		Timeout int
+		Timeout time.Duration
 
 		// Timeout is the maximum amount of time a dial will wait for
 		// a connect to complete. If Deadline is also set, it may fail
 		// earlier.
 		// The default is no timeout.
-		DialerTimeout int
+		DialerTimeout time.Duration
 
 		// TLSHandshakeTimeout specifies the maximum amount of time waiting to
 		// wait for a TLS handshake. Zero means no timeout.
-		TLSHandshakeTimeout int
+		TLSHandshakeTimeout time.Duration
 
 		// ExpectContinueTimeout, if non-zero, specifies the amount of
 		// time to wait for a server's first response headers after fully
@@ -113,21 +127,20 @@ type (
 		// causes the body to be sent immediately, without
 		// waiting for the server to approve.
 		// This time does not include the time to send the request header.
-		ExpectContinueTimeout int
+		ExpectContinueTimeout time.Duration
 
 		// ResponseHeaderTimeout, if non-zero, specifies the amount of
 		// time to wait for a server's response headers after fully
 		// writing the request (including its body, if any). This
 		// time does not include the time to read the response body.
-		ResponseHeaderTimeout int
+		ResponseHeaderTimeout time.Duration
 
-		// ServiceRegistry is the endpoint configuration for the
-		// service registry used for service discovery by this client.
-		// Actually only Type="sgulreg" is managed.
-		ServiceRegistry struct {
-			Type string
-			URL  string
-		}
+		// ServiceRegistry is the service registry for this client.
+		ServiceRegistry ServiceRegistry
+
+		// Balancing is the load balancing strategy for this client.
+		// Actually it can be one from "round-robin" or "random".
+		Balancing BalancingStrategy
 	}
 
 	// Ldap configuration
@@ -160,6 +173,7 @@ type (
 	Configuration struct {
 		Service    Service
 		API        API
+		Client     Client
 		DB         DB
 		Management Management
 		Log        Log
