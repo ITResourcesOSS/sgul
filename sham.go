@@ -101,30 +101,31 @@ func NewShamClient(serviceName string, apiPath string) *ShamClient {
 		apiPath:      apiPath,
 		httpClient:   httpClient(clientConf),
 		balancer:     BalancerFor(clientConf.Balancing.Strategy),
-		targetsCache: make([]string, 0),
+		TargetsCache: make([]string, 0),
 		// discovery:    NewDiscoveryClient(clientConfe),
 		serviceRegistry: clientConf.ServiceRegistry,
 		logger:          GetLogger().Sugar(),
 	}
-	sham.targetsCache, _ = sham.Discover()
+	// sham.TargetsCache, _ = sham.Discover()
+	sham.discover()
 	return sham
 }
 
 // Discover .
-func (sc *ShamClient) Discover() ([]string, error) {
+func (sc *ShamClient) discover() error {
 	sc.logger.Infof("discovering endpoints for service %s", sc.serviceName)
-	endpoints := []string{}
+	// endpoints := []string{}
 	response, err := sc.httpClient.Get(sc.serviceRegistry.URL + "/" + sc.serviceName)
 	if err != nil {
 		sc.logger.Errorf("Error making service discovery HTTP request: %s", err)
-		return endpoints, ErrFailedDiscoveryRequest
+		return ErrFailedDiscoveryRequest
 	}
 	sc.logger.Debugf("discovery response content-length: %s", response.Header.Get("Content-length"))
 
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		sc.logger.Errorf("Error reading service discovery HTTP response body: %s", err)
-		return endpoints, ErrFailedDiscoveryResponseBody
+		return ErrFailedDiscoveryResponseBody
 	}
 	defer response.Body.Close()
 
@@ -133,9 +134,10 @@ func (sc *ShamClient) Discover() ([]string, error) {
 
 	for _, instance := range serviceInfo.Instances {
 		endpoint := fmt.Sprintf("%s://%s%s", instance.Schema, instance.Host, sc.apiPath)
-		endpoints = append(endpoints, endpoint)
+		// endpoints = append(endpoints, endpoint)
+		sc.TargetsCache = append(sc.TargetsCache, endpoint)
 	}
 
-	sc.logger.Infof("service %s endpoints: %+v", sc.serviceName, endpoints)
-	return endpoints, nil
+	sc.logger.Infof("service %s endpoints: %+v", sc.serviceName, sc.TargetsCache)
+	return nil
 }
