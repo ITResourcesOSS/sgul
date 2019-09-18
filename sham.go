@@ -75,6 +75,11 @@ func NewShamClient(serviceName string, apiPath string) *ShamClient {
 		serviceRegistry: clientConf.ServiceRegistry,
 		logger:          GetLogger().Sugar(),
 	}
+	ping, err := sham.pingServiceRegistry()
+	if err != nil {
+		sham.logger.Errorf("service registry ping error: %s", err)
+	}
+	sham.logger.Debugf("service registry ping status code: %d", ping)
 	sham.discover()
 	return sham
 }
@@ -108,4 +113,17 @@ func (sc *ShamClient) discover() error {
 
 	sc.logger.Infof("service %s endpoints: %+v", sc.serviceName, sc.TargetsCache)
 	return nil
+}
+
+func (sc *ShamClient) pingServiceRegistry() (int, error) {
+	req, err := http.NewRequest("HEAD", sc.serviceRegistry.URL, nil)
+	if err != nil {
+		return 0, err
+	}
+	resp, err := sc.httpClient.Do(req)
+	if err != nil {
+		return 0, err
+	}
+	resp.Body.Close()
+	return resp.StatusCode, nil
 }
