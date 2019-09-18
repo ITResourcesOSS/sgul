@@ -117,11 +117,13 @@ func (sc *ShamClient) discover() error {
 	var serviceInfo sgulreg.ServiceInfoResponse
 	json.Unmarshal([]byte(body), &serviceInfo)
 
+	var endpoints []string
 	for _, instance := range serviceInfo.Instances {
 		endpoint := fmt.Sprintf("%s://%s%s", instance.Schema, instance.Host, sc.apiPath)
-		// endpoints = append(endpoints, endpoint)
-		sc.TargetsCache = append(sc.TargetsCache, endpoint)
+		endpoints = append(endpoints, endpoint)
 	}
+
+	sc.TargetsCache = MergeStringSlices(endpoints, sc.TargetsCache)
 
 	sc.logger.Infof("service %s endpoints: %+v", sc.serviceName, sc.TargetsCache)
 	return nil
