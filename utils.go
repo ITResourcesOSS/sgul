@@ -58,3 +58,22 @@ func ContainsString(s []string, elem string) bool {
 	}
 	return false
 }
+
+// MergeStringSlices merges string slices avoiding duplicates.
+// source code from Jacy Gao (http://jgao.io/?p=119)... thank you man!
+func MergeStringSlices(s1, s2 []string) []string {
+	s1 = append(s1, s2...)
+	seen := make(map[string]struct{}, len(s1))
+	j := 0
+	for _, s := range s1 {
+		if _, ok := seen[s]; ok {
+			continue
+		}
+		seen[s] = struct{}{}
+		s1[j] = s
+		j++
+	}
+
+	mergedSlice := s1[:j]
+	return mergedSlice
+}
