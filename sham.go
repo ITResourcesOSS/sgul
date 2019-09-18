@@ -93,24 +93,31 @@ func (sc *ShamClient) watchRegistry() {
 	}
 }
 
+func (sc *ShamClient) fallbackDiscovery() {
+	if len(sc.targetsCache) == 0 {
+		sc.targetsCache = sc.serviceRegistry.Fallback
+		sc.logger.Infof("using Fallback registry for service %s: %+v", sc.serviceName, sc.targetsCache)
+	} else {
+		sc.logger.Infof("continue using local registry for service %s: %+v", sc.serviceName, sc.targetsCache)
+	}
+}
+
 // Discover .
 func (sc *ShamClient) discover() error {
 	sc.logger.Debugf("discovering endpoints for service %s", sc.serviceName)
 	// endpoints := []string{}
 	response, err := sc.httpClient.Get(sc.serviceRegistry.URL + "/sgulreg/services/" + sc.serviceName)
 	if err != nil {
-		sc.targetsCache = sc.serviceRegistry.Fallback
 		sc.logger.Errorf("Error making service discovery HTTP request: %s", err)
-		sc.logger.Infof("using Fallback registry for service %s: %+v", sc.serviceName, sc.targetsCache)
+		sc.fallbackDiscovery()
 		return ErrFailedDiscoveryRequest
 	}
 	sc.logger.Debugf("discovery response content-length: %s", response.Header.Get("Content-length"))
 
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		sc.targetsCache = sc.serviceRegistry.Fallback
 		sc.logger.Errorf("Error reading service discovery HTTP response body: %s", err)
-		sc.logger.Infof("using Fallback registry for service %s: %+v", sc.serviceName, sc.targetsCache)
+		sc.fallbackDiscovery()
 		return ErrFailedDiscoveryResponseBody
 	}
 	defer response.Body.Close()
