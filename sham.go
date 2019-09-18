@@ -27,7 +27,7 @@ type ShamClient struct {
 	apiPath         string
 	httpClient      *http.Client
 	balancer        Balancer
-	TargetsCache    []string
+	targetsCache    []string
 	serviceRegistry ServiceRegistry
 	logger          *zap.SugaredLogger
 }
@@ -71,17 +71,12 @@ func NewShamClient(serviceName string, apiPath string) *ShamClient {
 		apiPath:         apiPath,
 		httpClient:      httpClient(clientConf),
 		balancer:        BalancerFor(clientConf.Balancing.Strategy),
-		TargetsCache:    make([]string, 0),
+		targetsCache:    make([]string, 0),
 		serviceRegistry: clientConf.ServiceRegistry,
 		logger:          GetLogger().Sugar(),
 	}
 
-	// ping, err := sham.pingServiceRegistry()
-	// if err != nil {
-	// 	sham.logger.Errorf("service registry ping error: %s", err)
-	// }
-	// sham.logger.Debugf("service registry ping status code: %d", ping)
-	sham.discover()
+	// sham.discover()
 	go sham.watchRegistry()
 	return sham
 }
@@ -117,25 +112,13 @@ func (sc *ShamClient) discover() error {
 
 	var endpoints []string
 	for _, instance := range serviceInfo.Instances {
+		sc.logger.Infof("discovered service %s endpoint serviceID: %s", sc.serviceName, instance.InstanceID)
 		endpoint := fmt.Sprintf("%s://%s%s", instance.Schema, instance.Host, sc.apiPath)
 		endpoints = append(endpoints, endpoint)
 	}
 
-	sc.TargetsCache = MergeStringSlices(endpoints, sc.TargetsCache)
+	sc.targetsCache = MergeStringSlices(endpoints, sc.targetsCache)
 
-	sc.logger.Infof("service %s endpoints: %+v", sc.serviceName, sc.TargetsCache)
+	sc.logger.Infof("discovered service %s endpoints: %+v", sc.serviceName, sc.targetsCache)
 	return nil
-}
-
-func (sc *ShamClient) pingServiceRegistry() (int, error) {
-	req, err := http.NewRequest("GET", sc.serviceRegistry.URL+"/health", nil)
-	if err != nil {
-		return 0, err
-	}
-	resp, err := sc.httpClient.Do(req)
-	if err != nil {
-		return 0, err
-	}
-	resp.Body.Close()
-	return resp.StatusCode, nil
 }
