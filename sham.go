@@ -116,7 +116,7 @@ func (sc *ShamClient) discover() error {
 }
 
 func (sc *ShamClient) pingServiceRegistry() (int, error) {
-	req, err := http.NewRequest("GET", sc.serviceRegistry.URL, nil)
+	req, err := http.NewRequest("GET", sc.serviceRegistry.URL+"/health", nil)
 	if err != nil {
 		return 0, err
 	}
