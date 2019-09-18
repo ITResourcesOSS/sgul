@@ -48,7 +48,7 @@ type ShamClient struct {
 	apiPath      string
 	httpClient   *http.Client
 	balancer     Balancer
-	targetsCache []string
+	TargetsCache []string
 	// discovery    *DiscoveryClient
 	serviceRegistry ServiceRegistry
 	logger          *zap.SugaredLogger
