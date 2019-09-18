@@ -126,7 +126,7 @@ func (sc *ShamClient) discover() error {
 			endpoints = append(endpoints, endpoint)
 		}
 
-		sc.targetsCache = MergeStringSlices(endpoints, sc.targetsCache)
+		sc.targetsCache = endpoints
 		sc.logger.Infof("discovered service %s endpoints: %+v", sc.serviceName, sc.targetsCache)
 	}
 
