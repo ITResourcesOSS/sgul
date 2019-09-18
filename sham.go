@@ -91,9 +91,13 @@ func NewShamClient(serviceName string, apiPath string) *ShamClient {
 func (sc *ShamClient) watachRegistry() {
 	sc.logger.Debug("start watching service registry")
 
-	for x := range time.Tick(2 * time.Second) {
-		sc.logger.Debugf("service discovery (tick: %+v)", x)
-		sc.discover()
+	// for x := range time.Tick(2 * time.Second) {
+	// 	sc.logger.Debugf("service discovery (tick: %+v)", x)
+	// 	sc.discover()
+	// }
+	for {
+		<-time.After(2 * time.Second)
+		go sc.discover()
 	}
 }
 
