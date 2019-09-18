@@ -101,6 +101,7 @@ func (sc *ShamClient) discover() error {
 	if err != nil {
 		sc.targetsCache = sc.serviceRegistry.Fallback
 		sc.logger.Errorf("Error making service discovery HTTP request: %s", err)
+		sc.logger.Infof("using Fallback registry for service %s: %+v", sc.serviceName, sc.targetsCache)
 		return ErrFailedDiscoveryRequest
 	}
 	sc.logger.Debugf("discovery response content-length: %s", response.Header.Get("Content-length"))
@@ -109,6 +110,7 @@ func (sc *ShamClient) discover() error {
 	if err != nil {
 		sc.targetsCache = sc.serviceRegistry.Fallback
 		sc.logger.Errorf("Error reading service discovery HTTP response body: %s", err)
+		sc.logger.Infof("using Fallback registry for service %s: %+v", sc.serviceName, sc.targetsCache)
 		return ErrFailedDiscoveryResponseBody
 	}
 	defer response.Body.Close()
@@ -125,12 +127,13 @@ func (sc *ShamClient) discover() error {
 		}
 
 		sc.targetsCache = MergeStringSlices(endpoints, sc.targetsCache)
+		sc.logger.Infof("discovered service %s endpoints: %+v", sc.serviceName, sc.targetsCache)
 	}
 
 	if len(sc.targetsCache) == 0 {
 		sc.targetsCache = sc.serviceRegistry.Fallback
+		sc.logger.Infof("using Fallback registry for service %s: %+v", sc.serviceName, sc.targetsCache)
 	}
 
-	sc.logger.Infof("discovered service %s endpoints: %+v", sc.serviceName, sc.targetsCache)
 	return nil
 }
