@@ -104,7 +104,7 @@ func NewShamClient(serviceName string, apiPath string) *ShamClient {
 	}
 }
 
-func (sc *ShamClient) discover() ([]string, error) {
+func (sc *ShamClient) Discover() ([]string, error) {
 	endpoints := []string{}
 	response, err := sc.httpClient.Get(sc.serviceRegistry.URL + "/" + sc.serviceName)
 	if err != nil {
