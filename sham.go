@@ -30,7 +30,6 @@ type ShamClient struct {
 	TargetsCache    []string
 	serviceRegistry ServiceRegistry
 	logger          *zap.SugaredLogger
-	watchRegistry   chan []string
 }
 
 var defaultClientConfiguration = Client{
@@ -75,7 +74,6 @@ func NewShamClient(serviceName string, apiPath string) *ShamClient {
 		TargetsCache:    make([]string, 0),
 		serviceRegistry: clientConf.ServiceRegistry,
 		logger:          GetLogger().Sugar(),
-		watchRegistry:   make(chan []string),
 	}
 
 	// ping, err := sham.pingServiceRegistry()
@@ -84,11 +82,11 @@ func NewShamClient(serviceName string, apiPath string) *ShamClient {
 	// }
 	// sham.logger.Debugf("service registry ping status code: %d", ping)
 	sham.discover()
-	go sham.watachRegistry()
+	go sham.watchRegistry()
 	return sham
 }
 
-func (sc *ShamClient) watachRegistry() {
+func (sc *ShamClient) watchRegistry() {
 	sc.logger.Debug("start watching service registry")
 	for {
 		<-time.After(2 * time.Second)
