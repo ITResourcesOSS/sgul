@@ -17,6 +17,13 @@ import (
 )
 
 type (
+	// Bootstrap defines configuration structure for the very initial service configuration.
+	Bootstrap struct {
+		ServiceRegistry struct {
+			Type string
+			URL  string
+		}
+	}
 	// Service is the structure for the service information configuration.
 	Service struct {
 		Group   string
