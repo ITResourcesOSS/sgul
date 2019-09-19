@@ -28,7 +28,7 @@ func RegisterService(r sgulreg.ServiceRegistrationRequest) (sgulreg.ServiceRegis
 	if err != nil {
 		log.Printf("service registration failed: %s", err)
 		log.Print("keep trying registration")
-		regClient.WatchRegistry()
+		go regClient.WatchRegistry()
 	}
 
 	return response, err
