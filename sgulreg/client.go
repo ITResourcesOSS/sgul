@@ -7,13 +7,6 @@ import (
 	"net/http"
 )
 
-// ClientConfig is the SgulREG API client configuration.
-type ClientConfig struct {
-	Host       string
-	Scheme     string
-	httpClient *http.Client
-}
-
 // Client is the SgulREG API client.
 type Client struct {
 	url        string
@@ -21,14 +14,10 @@ type Client struct {
 }
 
 // NewClient returns a new instance of the SgulREG API client.
-func NewClient(cc ClientConfig) *Client {
-	hc := http.DefaultClient
-	if cc.httpClient != nil {
-		hc = cc.httpClient
-	}
+func NewClient(registryURL string) *Client {
 	return &Client{
-		url:        cc.Scheme + "://" + cc.Host + "/sgulreg/services",
-		httpClient: hc,
+		url:        registryURL + "/sgulreg/services",
+		httpClient: http.DefaultClient,
 	}
 }
 
