@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -41,6 +42,9 @@ func (c *Client) Register() (ServiceRegistrationResponse, error) {
 	c.reqMux.RLock()
 	req := c.req
 	c.reqMux.RUnlock()
+
+	log.Printf("try service registration for service %s", req.Name)
+
 	response := ServiceRegistrationResponse{}
 	jsonRequest, _ := json.Marshal(req)
 	resp, err := c.httpClient.Post(c.url, "application/json", bytes.NewBuffer(jsonRequest))
@@ -52,6 +56,7 @@ func (c *Client) Register() (ServiceRegistrationResponse, error) {
 	var body []byte
 	body, err = ioutil.ReadAll(resp.Body)
 	json.Unmarshal(body, &response)
+	log.Printf("service registered with the global service registry: %+v", response)
 	return response, err
 }
 
