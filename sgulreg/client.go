@@ -60,7 +60,7 @@ func (c *Client) Register() (ServiceRegistrationResponse, error) {
 	return response, err
 }
 
-func (c *Client) watchRegistry() {
+func (c *Client) WatchRegistry() {
 	for {
 		<-time.After(2 * time.Second)
 		go c.Register()

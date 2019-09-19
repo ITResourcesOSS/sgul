@@ -1,13 +1,13 @@
 package sgul
 
 import (
+	"log"
+
 	"github.com/ITResourcesOSS/sgul/sgulreg"
 )
 
 func getServiceRegistryURL() string {
-	l := logger.Sugar()
 	if !IsSet("Client.ServiceRegistry.URL") {
-		l.Debug("Client.ServiceRegistry.URL not configured. Returning default service registry url")
 		return sgulreg.DefaultURL
 	}
 	return GetConfiguration().Client.ServiceRegistry.URL
@@ -23,5 +23,13 @@ func RegisterService(r sgulreg.ServiceRegistrationRequest) (sgulreg.ServiceRegis
 		InfoURL:        "http://localhost:1111/info",
 		HealthCheckURL: "http://localhost:1111/health",
 	})
-	return regClient.Register()
+
+	response, err := regClient.Register()
+	if err != nil {
+		log.Printf("service registration failed: %s", err)
+		log.Print("keep trying registration")
+		regClient.WatchRegistry()
+	}
+
+	return response, err
 }
