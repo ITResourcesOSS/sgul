@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/ITResourcesOSS/sgul/sgulreg"
@@ -27,7 +28,8 @@ type ShamClient struct {
 	apiPath         string
 	httpClient      *http.Client
 	balancer        Balancer
-	targetsCache    []string
+	localRegistry   []string
+	lrMutex         *sync.RWMutex
 	serviceRegistry ServiceRegistry
 	logger          *zap.SugaredLogger
 }
@@ -75,7 +77,8 @@ func NewShamClient(serviceName string, apiPath string) *ShamClient {
 		apiPath:         apiPath,
 		httpClient:      httpClient(clientConf),
 		balancer:        BalancerFor(clientConf.Balancing.Strategy),
-		targetsCache:    make([]string, 0),
+		lrMutex:         &sync.RWMutex{},
+		localRegistry:   make([]string, 0),
 		serviceRegistry: clientConf.ServiceRegistry,
 		logger:          GetLogger().Sugar(),
 	}
@@ -83,6 +86,12 @@ func NewShamClient(serviceName string, apiPath string) *ShamClient {
 	// sham.discover()
 	go sham.watchRegistry()
 	return sham
+}
+
+func (sc *ShamClient) setLocalRegistry(endpoints []string) {
+	sc.lrMutex.Lock()
+	sc.localRegistry = endpoints
+	sc.lrMutex.Unlock()
 }
 
 func (sc *ShamClient) watchRegistry() {
@@ -94,11 +103,12 @@ func (sc *ShamClient) watchRegistry() {
 }
 
 func (sc *ShamClient) fallbackDiscovery() {
-	if len(sc.targetsCache) == 0 {
-		sc.targetsCache = sc.serviceRegistry.Fallback
-		sc.logger.Infof("using Fallback registry for service %s: %+v", sc.serviceName, sc.targetsCache)
+	if len(sc.localRegistry) == 0 {
+		//sc.localRegistry = sc.serviceRegistry.Fallback
+		sc.setLocalRegistry(sc.serviceRegistry.Fallback)
+		sc.logger.Infof("using Fallback registry for service %s: %+v", sc.serviceName, sc.localRegistry)
 	} else {
-		sc.logger.Infof("continue using local registry for service %s: %+v", sc.serviceName, sc.targetsCache)
+		sc.logger.Infof("continue using local registry for service %s: %+v", sc.serviceName, sc.localRegistry)
 	}
 }
 
@@ -133,13 +143,15 @@ func (sc *ShamClient) discover() error {
 			endpoints = append(endpoints, endpoint)
 		}
 
-		sc.targetsCache = endpoints
-		sc.logger.Infof("discovered service %s endpoints: %+v", sc.serviceName, sc.targetsCache)
+		// sc.localRegistry = endpoints
+		sc.setLocalRegistry(endpoints)
+		sc.logger.Infof("discovered service %s endpoints: %+v", sc.serviceName, sc.localRegistry)
 	}
 
-	if len(sc.targetsCache) == 0 {
-		sc.targetsCache = sc.serviceRegistry.Fallback
-		sc.logger.Infof("using Fallback registry for service %s: %+v", sc.serviceName, sc.targetsCache)
+	if len(sc.localRegistry) == 0 {
+		// sc.localRegistry = sc.serviceRegistry.Fallback
+		sc.setLocalRegistry(sc.serviceRegistry.Fallback)
+		sc.logger.Infof("using Fallback registry for service %s: %+v", sc.serviceName, sc.localRegistry)
 	}
 
 	return nil
