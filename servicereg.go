@@ -16,13 +16,7 @@ func getServiceRegistryURL() string {
 // RegisterService is an helper to register a service with the SgulREG service.
 func RegisterService(r sgulreg.ServiceRegistrationRequest) (sgulreg.ServiceRegistrationResponse, error) {
 	regClient := sgulreg.NewClient(getServiceRegistryURL())
-	regClient.NewRequest(sgulreg.ServiceRegistrationRequest{
-		Name:           "test-service",
-		Host:           "localhost:1111",
-		Schema:         "http",
-		InfoURL:        "http://localhost:1111/info",
-		HealthCheckURL: "http://localhost:1111/health",
-	})
+	regClient.NewRequest(r)
 
 	response, err := regClient.Register()
 	if err != nil {
