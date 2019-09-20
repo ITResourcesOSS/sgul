@@ -67,13 +67,19 @@ func (c *Client) Register() (ServiceRegistrationResponse, error) {
 func (c *Client) WatchRegistry() {
 	for {
 		select {
+		case <-time.After(2 * time.Second):
+			go c.Register()
 		case <-c.stop:
 			log.Print("*********> stop watching register")
 			return
 		default:
 		}
 
-		<-time.After(2 * time.Second)
-		go c.Register()
+		// <-c.stop
+		// log.Print("*********> stop watching register")
+		// return
+
+		// <-time.After(2 * time.Second)
+		// go c.Register()
 	}
 }
