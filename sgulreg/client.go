@@ -72,7 +72,9 @@ func (c *Client) Register() (ServiceRegistrationResponse, error) {
 func (c *Client) WatchRegistry() {
 	for !c.registered {
 		<-time.After(2 * time.Second)
-		go c.Register()
+		if !c.registered {
+			go c.Register()
+		}
 	}
 	log.Print("*********> stop service registration retries")
 }
