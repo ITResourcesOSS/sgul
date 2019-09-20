@@ -62,6 +62,7 @@ func (c *Client) Register() (ServiceRegistrationResponse, error) {
 	log.Printf("*********> service registered with the global service registry: %+v", response)
 
 	c.reqMux.RLock()
+	log.Print("*********> stop service registration retries")
 	c.registered = true
 	c.reqMux.RUnlock()
 
@@ -76,5 +77,4 @@ func (c *Client) WatchRegistry() {
 			go c.Register()
 		}
 	}
-	log.Print("*********> stop service registration retries")
 }
