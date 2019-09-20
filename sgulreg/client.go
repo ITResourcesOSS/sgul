@@ -45,7 +45,7 @@ func (c *Client) Register() (ServiceRegistrationResponse, error) {
 	req := c.req
 	c.reqMux.RUnlock()
 
-	log.Printf("try service registration for service %s", req.Name)
+	log.Printf("*********> try service registration for service %s", req.Name)
 
 	response := ServiceRegistrationResponse{}
 	jsonRequest, _ := json.Marshal(req)
@@ -58,7 +58,7 @@ func (c *Client) Register() (ServiceRegistrationResponse, error) {
 	var body []byte
 	body, err = ioutil.ReadAll(resp.Body)
 	json.Unmarshal(body, &response)
-	log.Printf("service registered with the global service registry: %+v", response)
+	log.Printf("*********> service registered with the global service registry: %+v", response)
 	c.stop <- true
 	return response, err
 }
@@ -66,14 +66,14 @@ func (c *Client) Register() (ServiceRegistrationResponse, error) {
 // WatchRegistry start registration retries till the registration goes well.
 func (c *Client) WatchRegistry() {
 	for {
-		<-time.After(2 * time.Second)
-		go c.Register()
-
 		select {
 		case <-c.stop:
-			log.Print("stop watching register")
+			log.Print("*********> stop watching register")
 			return
 		default:
 		}
+
+		<-time.After(2 * time.Second)
+		go c.Register()
 	}
 }
