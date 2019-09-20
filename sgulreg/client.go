@@ -40,6 +40,7 @@ func (c *Client) NewRequest(r ServiceRegistrationRequest) {
 }
 
 // Register sends a service registration request to the SgulREG service.
+// TODO: add a channel to return results to the WatchRegistry() func.
 func (c *Client) Register() (ServiceRegistrationResponse, error) {
 	c.reqMux.RLock()
 	req := c.req
