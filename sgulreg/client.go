@@ -66,12 +66,13 @@ func (c *Client) Register() (ServiceRegistrationResponse, error) {
 // WatchRegistry start registration retries till the registration goes well.
 func (c *Client) WatchRegistry() {
 	for {
+		<-time.After(2 * time.Second)
+		go c.Register()
+
 		select {
 		case <-c.stop:
 			log.Print("stop watching register")
 			return
-		case <-time.After(2 * time.Second):
-			go c.Register()
 		default:
 		}
 	}
