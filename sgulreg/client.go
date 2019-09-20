@@ -19,7 +19,7 @@ type Client struct {
 	httpClient *http.Client
 	req        ServiceRegistrationRequest
 	reqMux     *sync.RWMutex
-	stop       chan bool
+	registered bool
 }
 
 // NewClient returns a new instance of the SgulREG API client.
@@ -28,7 +28,7 @@ func NewClient(registryURL string) *Client {
 		url:        registryURL + "/sgulreg/services",
 		httpClient: http.DefaultClient,
 		reqMux:     &sync.RWMutex{},
-		stop:       make(chan bool),
+		registered: false,
 	}
 }
 
@@ -43,6 +43,7 @@ func (c *Client) NewRequest(r ServiceRegistrationRequest) {
 func (c *Client) Register() (ServiceRegistrationResponse, error) {
 	c.reqMux.RLock()
 	req := c.req
+	c.registered = false
 	c.reqMux.RUnlock()
 
 	log.Printf("*********> try service registration for service %s", req.Name)
@@ -59,27 +60,19 @@ func (c *Client) Register() (ServiceRegistrationResponse, error) {
 	body, err = ioutil.ReadAll(resp.Body)
 	json.Unmarshal(body, &response)
 	log.Printf("*********> service registered with the global service registry: %+v", response)
-	c.stop <- true
+
+	c.reqMux.RLock()
+	c.registered = true
+	c.reqMux.RUnlock()
+
 	return response, err
 }
 
 // WatchRegistry start registration retries till the registration goes well.
 func (c *Client) WatchRegistry() {
-	for {
-		select {
-		case <-time.After(2 * time.Second):
-			go c.Register()
-		case <-c.stop:
-			log.Print("*********> stop watching register")
-			return
-		default:
-		}
-
-		// <-c.stop
-		// log.Print("*********> stop watching register")
-		// return
-
-		// <-time.After(2 * time.Second)
-		// go c.Register()
+	for !c.registered {
+		<-time.After(2 * time.Second)
+		go c.Register()
 	}
+	log.Print("*********> stop service registration retries")
 }
