@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -47,8 +46,6 @@ func (c *Client) Register() (ServiceRegistrationResponse, error) {
 	c.registered = false
 	c.reqMux.RUnlock()
 
-	log.Printf("*********> try service registration for service %s", req.Name)
-
 	response := ServiceRegistrationResponse{}
 	jsonRequest, _ := json.Marshal(req)
 	resp, err := c.httpClient.Post(c.url, "application/json", bytes.NewBuffer(jsonRequest))
@@ -60,10 +57,8 @@ func (c *Client) Register() (ServiceRegistrationResponse, error) {
 	var body []byte
 	body, err = ioutil.ReadAll(resp.Body)
 	json.Unmarshal(body, &response)
-	log.Printf("*********> service registered with the global service registry: %+v", response)
 
 	c.reqMux.RLock()
-	log.Print("*********> stop service registration retries")
 	c.registered = true
 	c.reqMux.RUnlock()
 
@@ -77,5 +72,31 @@ func (c *Client) WatchRegistry() {
 		if !c.registered {
 			go c.Register()
 		}
+	}
+}
+
+// DiscoverAll query the Service Registry to get all registered services information.
+// TODO: add WatchDiscoverAll()
+func (c *Client) DiscoverAll() ([]ServiceInfoResponse, error) {
+	resp, err := c.httpClient.Get(c.url)
+	if err != nil {
+		return []ServiceInfoResponse{}, err
+	}
+
+	response := []ServiceInfoResponse{}
+	var body []byte
+	body, err = ioutil.ReadAll(resp.Body)
+	json.Unmarshal(body, &response)
+	defer resp.Body.Close()
+
+	return response, err
+}
+
+// WatchDiscoverAll call registry for all service discovery at regular intervals.
+// Makes this client local registry always fresh.
+func (c *Client) WatchDiscoverAll() {
+	for {
+		<-time.After(10 * time.Second)
+		go c.DiscoverAll()
 	}
 }
