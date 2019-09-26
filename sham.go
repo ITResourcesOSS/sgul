@@ -90,8 +90,9 @@ func NewShamClient(serviceName string, apiPath string) *ShamClient {
 
 func (sc *ShamClient) setLocalRegistry(endpoints []string) {
 	sc.lrMutex.Lock()
+	defer sc.lrMutex.Unlock()
+
 	sc.localRegistry = endpoints
-	sc.lrMutex.Unlock()
 }
 
 func (sc *ShamClient) watchRegistry() {
