@@ -1,3 +1,11 @@
+// Copyright 2019 Luca Stasio <joshuagame@gmail.com>
+// Copyright 2019 IT Resources s.r.l.
+//
+// Use of this source code is governed by a MIT
+// license that can be found in the LICENSE file.
+
+// Package sgul defines common structures and functionalities for applications.
+// amqp.go defines commons for amqp integration.
 package sgul
 
 import (
@@ -16,6 +24,7 @@ type (
 		Channel    *amqp.Channel
 	}
 	// AMQPPublisher define the AMQP Publisher structure.
+	// Normally can be used as a sort of repository by a business service.
 	AMQPPublisher struct {
 		Connection   *AMQPConnection
 		Exchange     string
@@ -24,6 +33,7 @@ type (
 	}
 
 	// AMQPSubscriber define the AMQP Subscriber structure.
+	// TODO: complete the definition!!!
 	AMQPSubscriber struct {
 	}
 )

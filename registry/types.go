@@ -1,4 +1,4 @@
-package sgulreg
+package registry
 
 import (
 	"time"

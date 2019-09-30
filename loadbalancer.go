@@ -1,3 +1,11 @@
+// Copyright 2019 Luca Stasio <joshuagame@gmail.com>
+// Copyright 2019 IT Resources s.r.l.
+//
+// Use of this source code is governed by a MIT
+// license that can be found in the LICENSE file.
+
+// Package sgul defines common structures and functionalities for applications.
+// loadbalance.go defines commons for endpoints load balancing.
 package sgul
 
 import (
@@ -30,19 +38,19 @@ var balancers = map[string]Balancer{
 	RoundRobinStrategy: &roundRobinBalancer{c: 0},
 }
 
+// Balance executes a so simple "round-robin" algorithm.
 func (rrb *roundRobinBalancer) Balance(endpoints []string) (int, string) {
 	if rrb.c >= len(endpoints) {
 		rrb.c = 0
 	}
 	idx := rrb.c
 	rrb.c = rrb.c + 1
-	// logger.Debugf("RooundRobin balancing to idx: %d, endpoint: %s", idx, endpoints[idx])
 	return idx, endpoints[idx]
 }
 
+// Balance executes a so simple "random" algorithm.
 func (rb *randomBalancer) Balance(endpoints []string) (int, string) {
 	idx := rand.Intn(len(endpoints))
-	// logger.Debugf("Random balancing to idx: %d, endpoint: %s", idx, endpoints[idx])
 	return idx, endpoints[idx]
 }
 

@@ -104,6 +104,9 @@ type (
 		// at the client startup, the client will use this fallback endpoints list to balance
 		// client requests.
 		Fallback []string
+		// WatchInterval specifies the duration of a single interval between
+		// two service discovery invocations from a service registry watcher.
+		WatchInterval time.Duration
 	}
 
 	// BalancingStrategy defines the load balancing strategy.

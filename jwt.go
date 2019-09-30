@@ -1,3 +1,11 @@
+// Copyright 2019 Luca Stasio <joshuagame@gmail.com>
+// Copyright 2019 IT Resources s.r.l.
+//
+// Use of this source code is governed by a MIT
+// license that can be found in the LICENSE file.
+
+// Package sgul defines common structures and functionalities for applications.
+// jwt.go defines commons for jwt Authorization.
 package sgul
 
 import (
@@ -23,6 +31,9 @@ const ctxPrincipalKey ctxKey = iota
 // ErrPrincipalNotInContext is returned if there is no Principal in the request context.
 var ErrPrincipalNotInContext = errors.New("No Principal in request context")
 
+// jwtAuthorize will authorize the incoming user against input roles.
+// if the user is authorized, a Principal struct will be set in request context
+// for later use in the request mgmtr chain.
 func jwtAuthorize(roles []string, next http.Handler) http.HandlerFunc {
 	conf := GetConfiguration().API.Security
 	secret := []byte(conf.Jwt.Secret)

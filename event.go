@@ -1,3 +1,12 @@
+// Copyright 2019 Luca Stasio <joshuagame@gmail.com>
+// Copyright 2019 IT Resources s.r.l.
+//
+// Use of this source code is governed by a MIT
+// license that can be found in the LICENSE file.
+
+// Package sgul defines common structures and functionalities for applications.
+// event.go defines commons for application events: normally to push some event
+// into an amqp event bus.
 package sgul
 
 // Event is the struct used to push event messages into AMQP queues.

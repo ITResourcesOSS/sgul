@@ -1,4 +1,4 @@
-module github.com/ITResourcesOSS/sgul
+module github.com/itross/sgul
 
 go 1.12
 

@@ -1,3 +1,11 @@
+// Copyright 2019 Luca Stasio <joshuagame@gmail.com>
+// Copyright 2019 IT Resources s.r.l.
+//
+// Use of this source code is governed by a MIT
+// license that can be found in the LICENSE file.
+
+// Package sgul defines common structures and functionalities for applications.
+// sham.go defines the ShamClient struct to be used as a service-to-service http load-balanced client.
 package sgul
 
 import (
@@ -10,8 +18,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ITResourcesOSS/sgul/sgulreg"
-
+	"github.com/itross/sgul/registry"
 	"go.uber.org/zap"
 )
 
@@ -34,6 +41,7 @@ type ShamClient struct {
 	logger          *zap.SugaredLogger
 }
 
+// defaultClientConfiguration is a reasonably good default configuration for a ShamClient.
 var defaultClientConfiguration = Client{
 	Timeout:               120 * time.Second,
 	DialerTimeout:         2 * time.Second,
@@ -42,12 +50,14 @@ var defaultClientConfiguration = Client{
 	ResponseHeaderTimeout: 10 * time.Second,
 	Balancing:             BalancingStrategy{Strategy: RoundRobinStrategy},
 	ServiceRegistry: ServiceRegistry{
-		Type:     "sgulreg",
-		URL:      "http://localhost:9687",
-		Fallback: []string{},
+		Type:          "sgulreg",
+		URL:           "http://localhost:9687",
+		Fallback:      []string{},
+		WatchInterval: 2 * time.Second,
 	},
 }
 
+// clientConfiguration returns the right client configuration.
 func clientConfiguration() Client {
 	if !IsSet("Client") {
 		return defaultClientConfiguration
@@ -55,6 +65,7 @@ func clientConfiguration() Client {
 	return GetConfiguration().Client
 }
 
+// httpClient initialize the internal http client structure with the incoming configuration.
 func httpClient(conf Client) *http.Client {
 	return &http.Client{
 		Transport: &http.Transport{
@@ -88,6 +99,7 @@ func NewShamClient(serviceName string, apiPath string) *ShamClient {
 	return sham
 }
 
+// setLocalRegistry simply sets the local registry value (thread-safe).
 func (sc *ShamClient) setLocalRegistry(endpoints []string) {
 	sc.lrMutex.Lock()
 	defer sc.lrMutex.Unlock()
@@ -95,17 +107,22 @@ func (sc *ShamClient) setLocalRegistry(endpoints []string) {
 	sc.localRegistry = endpoints
 }
 
+// watchRegistry keeps watching to the service registry continuously calling
+// for service discovery.
 func (sc *ShamClient) watchRegistry() {
 	sc.logger.Debug("start watching service registry")
 	for {
-		<-time.After(2 * time.Second)
+		//<-time.After(2 * time.Second)
+		<-time.After(sc.serviceRegistry.WatchInterval)
 		go sc.discover()
 	}
 }
 
+// fallbackDiscovery sets up local registry to fallback information, only if the local registry
+// is empty, otherwise it leaves the registry as is.
+// fallbackDiscovery will be called if the system service discovery server does not return a response.
 func (sc *ShamClient) fallbackDiscovery() {
 	if len(sc.localRegistry) == 0 {
-		//sc.localRegistry = sc.serviceRegistry.Fallback
 		sc.setLocalRegistry(sc.serviceRegistry.Fallback)
 		sc.logger.Infof("using Fallback registry for service %s: %+v", sc.serviceName, sc.localRegistry)
 	} else {
@@ -113,10 +130,9 @@ func (sc *ShamClient) fallbackDiscovery() {
 	}
 }
 
-// Discover .
+// Discover gets service discovery information from the system service registry.
 func (sc *ShamClient) discover() error {
 	sc.logger.Debugf("discovering endpoints for service %s", sc.serviceName)
-	// endpoints := []string{}
 	response, err := sc.httpClient.Get(sc.serviceRegistry.URL + "/sgulreg/services/" + sc.serviceName)
 	if err != nil {
 		sc.logger.Errorf("Error making service discovery HTTP request: %s", err)
@@ -133,7 +149,7 @@ func (sc *ShamClient) discover() error {
 	}
 	defer response.Body.Close()
 
-	var serviceInfo sgulreg.ServiceInfoResponse
+	var serviceInfo registry.ServiceInfoResponse
 	json.Unmarshal([]byte(body), &serviceInfo)
 
 	if len(serviceInfo.Instances) > 0 {
