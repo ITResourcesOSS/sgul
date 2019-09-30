@@ -44,6 +44,12 @@ type (
 		Router() chi.Router
 	}
 
+	// RestController is the Rest API Controller interface.
+	RestController interface {
+		BasePath() string
+		Router() chi.Router
+	}
+
 	// Controller defines the base API Controller structure
 	Controller struct {
 		// Path is the base routing path for each route of the controller
