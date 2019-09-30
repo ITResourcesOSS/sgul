@@ -32,7 +32,7 @@ func Stringify(strct interface{}) string {
 }
 
 // MaskedStringify converts a struct to its string representation obfuscating values
-// for the key passed in mask slice.
+// for keys in the mask slice.
 func MaskedStringify(strct interface{}, mask []string) string {
 	var buffer bytes.Buffer
 	buffer.WriteString("[")
