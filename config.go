@@ -75,6 +75,12 @@ type (
 			Port            int
 			BaseRoutingPath string
 		}
+		// Cors defines the cors allowed resources struct.
+		Cors struct {
+			Origin  []string
+			Methods []string
+			Headers []string
+		}
 		Security struct {
 			Enabled bool
 			Jwt     struct {
