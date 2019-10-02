@@ -18,11 +18,14 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+// Logger is a type alias for Zap sugared logger
+type Logger zap.SugaredLogger
+
 var onceLogger sync.Once
-var logger *zap.SugaredLogger
+var logger *Logger
 
 // GetLogger .
-func GetLogger() *zap.SugaredLogger {
+func GetLogger() *Logger {
 	onceLogger.Do(func() {
 		conf := GetConfiguration().Log
 		env := os.Getenv("ENV")
@@ -51,9 +54,9 @@ func GetLogger() *zap.SugaredLogger {
 		core := zapcore.NewCore(encoder, writerSyncer, lgLvl)
 
 		if conf.Caller {
-			logger = zap.New(core, zap.AddCaller()).Sugar()
+			logger = (*Logger)(zap.New(core, zap.AddCaller()).Sugar())
 		} else {
-			logger = zap.New(core).Sugar()
+			logger = (*Logger)(zap.New(core).Sugar())
 		}
 
 	})
@@ -62,7 +65,7 @@ func GetLogger() *zap.SugaredLogger {
 }
 
 // GetLoggerByConf .
-func GetLoggerByConf(conf Log) *zap.SugaredLogger {
+func GetLoggerByConf(conf Log) *Logger {
 	onceLogger.Do(func() {
 		//conf := GetConfiguration().Log
 		env := os.Getenv("ENV")
@@ -91,9 +94,9 @@ func GetLoggerByConf(conf Log) *zap.SugaredLogger {
 		core := zapcore.NewCore(encoder, writerSyncer, lgLvl)
 
 		if conf.Caller {
-			logger = zap.New(core, zap.AddCaller()).Sugar()
+			logger = (*Logger)(zap.New(core, zap.AddCaller()).Sugar())
 		} else {
-			logger = zap.New(core).Sugar()
+			logger = (*Logger)(zap.New(core).Sugar())
 		}
 
 	})
