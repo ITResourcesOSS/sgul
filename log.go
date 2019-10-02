@@ -19,7 +19,8 @@ import (
 )
 
 // Logger is a type alias for Zap sugared logger
-type Logger zap.SugaredLogger
+// We love Zap, we use Zap and we will continue using it forever!
+type Logger = zap.SugaredLogger
 
 var onceLogger sync.Once
 var logger *Logger

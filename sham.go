@@ -19,7 +19,6 @@ import (
 	"time"
 
 	"github.com/itross/sgul/registry"
-	"go.uber.org/zap"
 )
 
 // ErrFailedDiscoveryRequest is returned when a discovery request fails.
@@ -38,7 +37,7 @@ type ShamClient struct {
 	localRegistry   []string
 	lrMutex         *sync.RWMutex
 	serviceRegistry ServiceRegistry
-	logger          *zap.SugaredLogger
+	logger          *Logger
 }
 
 // defaultClientConfiguration is a reasonably good default configuration for a ShamClient.
