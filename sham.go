@@ -91,7 +91,7 @@ func NewShamClient(serviceName string, apiPath string) *ShamClient {
 		lrMutex:         &sync.RWMutex{},
 		localRegistry:   make([]string, 0),
 		serviceRegistry: clientConf.ServiceRegistry,
-		logger:          GetLogger().Sugar(),
+		logger:          GetLogger(),
 	}
 
 	// sham.discover()

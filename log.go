@@ -19,10 +19,10 @@ import (
 )
 
 var onceLogger sync.Once
-var logger *zap.Logger
+var logger *zap.SugaredLogger
 
 // GetLogger .
-func GetLogger() *zap.Logger {
+func GetLogger() *zap.SugaredLogger {
 	onceLogger.Do(func() {
 		conf := GetConfiguration().Log
 		env := os.Getenv("ENV")
@@ -51,9 +51,9 @@ func GetLogger() *zap.Logger {
 		core := zapcore.NewCore(encoder, writerSyncer, lgLvl)
 
 		if conf.Caller {
-			logger = zap.New(core, zap.AddCaller())
+			logger = zap.New(core, zap.AddCaller()).Sugar()
 		} else {
-			logger = zap.New(core)
+			logger = zap.New(core).Sugar()
 		}
 
 	})
@@ -62,7 +62,7 @@ func GetLogger() *zap.Logger {
 }
 
 // GetLoggerByConf .
-func GetLoggerByConf(conf Log) *zap.Logger {
+func GetLoggerByConf(conf Log) *zap.SugaredLogger {
 	onceLogger.Do(func() {
 		//conf := GetConfiguration().Log
 		env := os.Getenv("ENV")
@@ -91,9 +91,9 @@ func GetLoggerByConf(conf Log) *zap.Logger {
 		core := zapcore.NewCore(encoder, writerSyncer, lgLvl)
 
 		if conf.Caller {
-			logger = zap.New(core, zap.AddCaller())
+			logger = zap.New(core, zap.AddCaller()).Sugar()
 		} else {
-			logger = zap.New(core)
+			logger = zap.New(core).Sugar()
 		}
 
 	})
