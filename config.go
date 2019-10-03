@@ -9,9 +9,9 @@
 package sgul
 
 import (
-	"strings"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -249,7 +249,7 @@ func LoadConfiguration(configStruct interface{}) {
 
 	if os.Getenv("ENV") != "" {
 		viper.SetConfigName("config-" + os.Getenv("ENV"))
-	} ekey strinlse {
+	} else {
 		viper.SetConfigName("config")
 	}
 
@@ -305,6 +305,6 @@ func GetComponentConfig(cname string) interface{} {
 		return GetConfiguration().AMQP
 	default:
 		return Get(cname)
-		
+
 	}
 }
