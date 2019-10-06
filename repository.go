@@ -13,6 +13,11 @@ package sgul
 
 import "github.com/jinzhu/gorm"
 
+// GorRepositoryInterface is the contract for a Gorm Repository.
+type GorRepositoryInterface interface {
+	SetDB(db *gorm.DB)
+}
+
 // GormRepository defines the base repository structure form gorm based db access
 type GormRepository struct {
 	DB *gorm.DB
