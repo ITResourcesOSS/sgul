@@ -13,8 +13,8 @@ package sgul
 
 import "github.com/jinzhu/gorm"
 
-// GorRepositoryInterface is the contract for a Gorm Repository.
-type GorRepositoryInterface interface {
+// GormRepositoryInterface is the contract for a Gorm Repository.
+type GormRepositoryInterface interface {
 	SetDB(db *gorm.DB)
 }
 
