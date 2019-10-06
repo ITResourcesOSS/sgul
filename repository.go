@@ -47,3 +47,8 @@ func (r GormRepository) DoInTransaction(fn InTransaction) error {
 func NewRepository(db *gorm.DB) GormRepository {
 	return GormRepository{DB: db}
 }
+
+// SetDB sets gorm db instance into the repository.
+func (r *GormRepository) SetDB(db *gorm.DB) {
+	r.DB = db
+}

@@ -285,6 +285,7 @@ func IsSet(key string) bool {
 	return viper.IsSet(key)
 }
 
+// GetComponentConfig returns default config structure for a default component name.
 func GetComponentConfig(cname string) interface{} {
 	switch strings.ToLower(cname) {
 	case "service":
