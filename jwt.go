@@ -14,6 +14,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/go-chi/chi/middleware"
+
+	"github.com/ITResourcesOSS/sgul"
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
@@ -43,7 +46,12 @@ func jwtAuthorize(roles []string, next http.Handler) http.HandlerFunc {
 
 		// Trim out Bearer from Authorization Header
 		if authorization == "" || len(trimmedAuth) == 0 {
-			http.Error(w, "", http.StatusUnauthorized)
+			// http.Error(w, "", http.StatusUnauthorized)
+			RenderError(w,
+				sgul.NewHTTPError(
+					errors.New("Unauthorized"),
+					http.StatusUnauthorized, "Unauthorized",
+					middleware.GetReqID(r.Context())))
 			return
 		}
 
@@ -64,7 +72,12 @@ func jwtAuthorize(roles []string, next http.Handler) http.HandlerFunc {
 
 		// check roles authorization: 403 Forbidden iff check fails
 		if !ContainsString(roles, principal.Role) {
-			http.Error(w, "", http.StatusForbidden)
+			//http.Error(w, "", http.StatusForbidden)
+			RenderError(w,
+				sgul.NewHTTPError(
+					errors.New("Forbidden"),
+					http.StatusForbidden, "Forbidden",
+					middleware.GetReqID(r.Context())))
 			return
 		}
 
