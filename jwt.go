@@ -46,12 +46,10 @@ func jwtAuthorize(roles []string, next http.Handler) http.HandlerFunc {
 
 		// Trim out Bearer from Authorization Header
 		if authorization == "" || len(trimmedAuth) == 0 {
-			// http.Error(w, "", http.StatusUnauthorized)
-			fmt.Printf("error -> %s", errors.New("Forbidden"))
 			RenderError(w,
 				NewHTTPError(
 					errors.New("Unauthorized"),
-					http.StatusUnauthorized, "Unauthorized",
+					http.StatusUnauthorized, "Unauthorized user",
 					middleware.GetReqID(r.Context())))
 			return
 		}
@@ -62,7 +60,11 @@ func jwtAuthorize(roles []string, next http.Handler) http.HandlerFunc {
 				return secret, nil
 			})
 		if err != nil {
-			http.Error(w, "", http.StatusUnauthorized)
+			RenderError(w,
+				NewHTTPError(
+					errors.New("Unauthorized"),
+					http.StatusUnauthorized, "Unauthorized user",
+					middleware.GetReqID(r.Context())))
 			return
 		}
 
@@ -73,12 +75,11 @@ func jwtAuthorize(roles []string, next http.Handler) http.HandlerFunc {
 
 		// check roles authorization: 403 Forbidden iff check fails
 		if !ContainsString(roles, principal.Role) {
-			//http.Error(w, "", http.StatusForbidden)
 			fmt.Printf("error -> %s", errors.New("Forbidden"))
 			RenderError(w,
 				NewHTTPError(
 					errors.New("Forbidden"),
-					http.StatusForbidden, "Forbidden",
+					http.StatusForbidden, "Forbidden resource for the user",
 					middleware.GetReqID(r.Context())))
 			return
 		}
