@@ -11,6 +11,7 @@ package sgul
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -46,7 +47,7 @@ func jwtAuthorize(roles []string, next http.Handler) http.HandlerFunc {
 		// Trim out Bearer from Authorization Header
 		if authorization == "" || len(trimmedAuth) == 0 {
 			// http.Error(w, "", http.StatusUnauthorized)
-			logger.Error(errors.New("Unauthorized"))
+			fmt.Printf("error -> %s", errors.New("Forbidden"))
 			RenderError(w,
 				NewHTTPError(
 					errors.New("Unauthorized"),
@@ -73,7 +74,7 @@ func jwtAuthorize(roles []string, next http.Handler) http.HandlerFunc {
 		// check roles authorization: 403 Forbidden iff check fails
 		if !ContainsString(roles, principal.Role) {
 			//http.Error(w, "", http.StatusForbidden)
-			logger.Error(errors.New("Forbidden"))
+			fmt.Printf("error -> %s", errors.New("Forbidden"))
 			RenderError(w,
 				NewHTTPError(
 					errors.New("Forbidden"),
