@@ -42,6 +42,7 @@ type (
 		Exclusive  bool
 		NoLocal    bool
 		NoWait     bool
+		Replies    <-chan amqp.Delivery
 	}
 )
 
@@ -76,12 +77,12 @@ func (conn *AMQPConnection) Close() {
 	conn.Connection.Close()
 }
 
-// Publisher .
+// Publisher returns a new AMQP Publisher on this connection.
 func (conn *AMQPConnection) Publisher(exchange string, exchangeType string, routingKey string) (*AMQPPublisher, error) {
 	return NewAMQPPublisher(conn, exchange, exchangeType, routingKey)
 }
 
-// Subscriber .
+// Subscriber reutrns a new AMQP Subscriber on this connection.
 func (conn *AMQPConnection) Subscriber(queue string, consumer string, durable, autoDelete, autoAck, exclusive, noLocal, noWait bool) (*AMQPSubscriber, error) {
 	return NewAMQPSubscriber(conn, queue, consumer, durable, autoDelete, autoAck, exclusive, noLocal, noWait)
 }
@@ -124,7 +125,7 @@ func (pub *AMQPPublisher) Publish(event Event) error {
 	return err
 }
 
-// NewAMQPSubscriber .
+// NewAMQPSubscriber returns a new AMQP Subscriber object.
 func NewAMQPSubscriber(connection *AMQPConnection, queue string, consumer string, durable, autoDelete, autoAck, exclusive, noLocal, noWait bool) (*AMQPSubscriber, error) {
 	q, err := connection.Channel.QueueDeclare(
 		queue,
@@ -148,4 +149,17 @@ func NewAMQPSubscriber(connection *AMQPConnection, queue string, consumer string
 		NoLocal:    noLocal,
 		NoWait:     noWait,
 	}, nil
+}
+
+// Consume start consuming messages from queue. Returns outputs channel to range on.
+func (sub *AMQPSubscriber) Consume() (<-chan amqp.Delivery, error) {
+	return sub.Connection.Channel.Consume(
+		sub.Queue,
+		sub.Consumer,
+		sub.AutoAck,
+		sub.Exclusive,
+		sub.NoLocal,
+		sub.NoWait,
+		nil,
+	)
 }
