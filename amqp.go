@@ -35,6 +35,13 @@ type (
 	// AMQPSubscriber define the AMQP Subscriber structure.
 	// TODO: complete the definition!!!
 	AMQPSubscriber struct {
+		Connection *AMQPConnection
+		Queue      string
+		Consumer   string
+		AutoAck    bool
+		Exclusive  bool
+		NoLocal    bool
+		NoWait     bool
 	}
 )
 
@@ -67,6 +74,16 @@ func (conn *AMQPConnection) Connect() error {
 func (conn *AMQPConnection) Close() {
 	conn.Channel.Close()
 	conn.Connection.Close()
+}
+
+// Publisher .
+func (conn *AMQPConnection) Publisher(exchange string, exchangeType string, routingKey string) (*AMQPPublisher, error) {
+	return NewAMQPPublisher(conn, exchange, exchangeType, routingKey)
+}
+
+// Subscriber .
+func (conn *AMQPConnection) Subscriber(queue string, consumer string, durable, autoDelete, autoAck, exclusive, noLocal, noWait bool) (*AMQPSubscriber, error) {
+	return NewAMQPSubscriber(conn, queue, consumer, durable, autoDelete, autoAck, exclusive, noLocal, noWait)
 }
 
 // NewAMQPPublisher return a new AMQP Publisher object.
@@ -105,4 +122,30 @@ func (pub *AMQPPublisher) Publish(event Event) error {
 		})
 
 	return err
+}
+
+// NewAMQPSubscriber .
+func NewAMQPSubscriber(connection *AMQPConnection, queue string, consumer string, durable, autoDelete, autoAck, exclusive, noLocal, noWait bool) (*AMQPSubscriber, error) {
+	q, err := connection.Channel.QueueDeclare(
+		queue,
+		durable,
+		autoDelete,
+		exclusive,
+		noWait,
+		nil,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &AMQPSubscriber{
+		Connection: connection,
+		Queue:      q.Name,
+		Consumer:   consumer,
+		AutoAck:    autoAck,
+		Exclusive:  exclusive,
+		NoLocal:    noLocal,
+		NoWait:     noWait,
+	}, nil
 }
