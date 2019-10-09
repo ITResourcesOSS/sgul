@@ -231,6 +231,26 @@ type (
 		Exclusive bool
 	}
 
+	// Event Broker configuration structs
+
+	// OutboundEvent is an evt_to_producer configuration entry.
+	OutboundEvent struct {
+		Name      string
+		Publisher string
+	}
+
+	// InboundEvent is a evt_to_consumer configuration entry.
+	InboundEvent struct {
+		Name       string
+		Subscriber string
+	}
+
+	// Events is the event mapping configuration struct.
+	Events struct {
+		Outbounds []OutboundEvent
+		Inbounds  []InboundEvent
+	}
+
 	// Configuration describe the type for the configuration file
 	Configuration struct {
 		Service    Service
@@ -241,6 +261,7 @@ type (
 		Log        Log
 		Ldap       Ldap
 		AMQP       AMQP
+		Events     Events
 	}
 )
 
@@ -345,6 +366,8 @@ func GetComponentConfig(cname string) interface{} {
 		return GetConfiguration().Ldap
 	case "amqp":
 		return GetConfiguration().AMQP
+	case "events":
+		return GetConfiguration().Events
 	default:
 		return Get(cname)
 
