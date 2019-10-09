@@ -181,13 +181,54 @@ type (
 
 	// AMQP configuration
 	AMQP struct {
-		User     string
-		Password string
-		Host     string
-		Port     int
-		VHost    string
-		Exchange string
-		Queue    string
+		User        string
+		Password    string
+		Host        string
+		Port        int
+		VHost       string
+		Exchanges   []Exchange
+		Queues      []Queue
+		Publishers  []Publisher
+		Subscribers []Subscriber
+	}
+
+	// Exchange is the config struct for an AMQP Exchange.
+	Exchange struct {
+		Name       string
+		Type       string
+		AutoDelete bool
+		Durable    bool
+		Internal   bool
+		NoWait     bool
+	}
+
+	// Queue is the config struct for an AMQP Queue.
+	Queue struct {
+		Name       string
+		AutoDelete bool
+		Durable    bool
+		Internal   bool
+		NoWait     bool
+	}
+
+	// Publisher is the config struct for an AMQP Publisher.
+	Publisher struct {
+		Name        string
+		Exchange    string
+		RoutingKey  string
+		ContentType string
+		// 2: "persistent" or 1: "non-persistent"
+		DeliveryMode uint8
+	}
+
+	// Subscriber is the config struct for an AMQP Subscriber.
+	Subscriber struct {
+		Name      string
+		Queue     string
+		NoAck     bool
+		NoLocal   bool
+		NoWait    bool
+		Exclusive bool
 	}
 
 	// Configuration describe the type for the configuration file

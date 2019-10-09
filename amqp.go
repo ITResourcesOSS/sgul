@@ -11,6 +11,7 @@ package sgul
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/streadway/amqp"
@@ -30,6 +31,8 @@ type (
 		Exchange     string
 		ExchangeType string
 		RoutingKey   string
+		ContentType  string
+		DeliveryMode uint8
 	}
 
 	// AMQPSubscriber define the AMQP Subscriber structure.
@@ -82,33 +85,87 @@ func (conn *AMQPConnection) Close() error {
 	return nil
 }
 
-// Publisher returns a new AMQP Publisher on this connection.
-func (conn *AMQPConnection) Publisher(exchange string, exchangeType string, routingKey string) (*AMQPPublisher, error) {
-	return NewAMQPPublisher(conn, exchange, exchangeType, routingKey)
-}
+// // Publisher returns a new AMQP Publisher on this connection.
+// func (conn *AMQPConnection) Publisher(exchange string, exchangeType string, routingKey string) (*AMQPPublisher, error) {
+// 	return NewAMQPPublisher(conn, exchange, exchangeType, routingKey)
+// }
 
 // Subscriber reutrns a new AMQP Subscriber on this connection.
 func (conn *AMQPConnection) Subscriber(queue string, consumer string, durable, autoDelete, autoAck, exclusive, noLocal, noWait bool) (*AMQPSubscriber, error) {
 	return NewAMQPSubscriber(conn, queue, consumer, durable, autoDelete, autoAck, exclusive, noLocal, noWait)
 }
 
-// NewAMQPPublisher return a new AMQP Publisher object.
-func NewAMQPPublisher(connection *AMQPConnection, exchange string, exchangeType string, routingKey string) (*AMQPPublisher, error) {
-	if err := connection.Channel.ExchangeDeclare(
-		exchange, exchangeType,
-		true, false, false, false, nil); err != nil {
-		return nil, err
+// // NewAMQPPublisher return a new AMQP Publisher object.
+// func NewAMQPPublisher(connection *AMQPConnection, exchange string, exchangeType string, routingKey string) (*AMQPPublisher, error) {
+// 	if err := connection.Channel.ExchangeDeclare(
+// 		exchange, exchangeType,
+// 		true, false, false, false, nil); err != nil {
+// 		return nil, err
+// 	}
+
+// 	return &AMQPPublisher{
+// 		Connection:   connection,
+// 		Exchange:     exchange,
+// 		ExchangeType: exchangeType,
+// 		RoutingKey:   routingKey,
+// 	}, nil
+// }
+
+// NewPublisher return a new AMQP Publisher object initialized with "name"-publisher configuration.
+func (conn *AMQPConnection) NewPublisher(name string) (*AMQPPublisher, error) {
+	if publisher, ok := publisherFor(name); ok {
+		if exchange, ok := exchangeFor(publisher.Name); ok {
+			err := conn.Channel.ExchangeDeclare(
+				exchange.Name,
+				exchange.Type,
+				exchange.Durable,
+				exchange.AutoDelete,
+				exchange.Internal,
+				exchange.NoWait,
+				nil)
+
+			if err != nil {
+				return nil, err
+			}
+
+			return &AMQPPublisher{
+				Connection:   conn,
+				Exchange:     exchange.Name,
+				ExchangeType: exchange.Type,
+				RoutingKey:   publisher.RoutingKey,
+				ContentType:  publisher.ContentType,
+				DeliveryMode: publisher.DeliveryMode,
+			}, nil
+		}
 	}
 
-	return &AMQPPublisher{
-		Connection:   connection,
-		Exchange:     exchange,
-		ExchangeType: exchangeType,
-		RoutingKey:   routingKey,
-	}, nil
+	return nil, nil
+}
+
+func publisherFor(name string) (Publisher, bool) {
+	for _, publisher := range amqpConf.Publishers {
+		if strings.ToLower(publisher.Name) == strings.ToLower(name) {
+			return publisher, true
+		}
+	}
+
+	// no publisher configuration found for "name"
+	return Publisher{}, false
+}
+
+func exchangeFor(name string) (Exchange, bool) {
+	for _, exchange := range amqpConf.Exchanges {
+		if exchange.Name == name {
+			return exchange, true
+		}
+	}
+
+	// no exchange configuration found for "name"
+	return Exchange{}, false
 }
 
 // Publish send a message to the AMQP Exchange.
+// TODO: try and parametrize even "mandatory" and "immdiate" flags.
 func (pub *AMQPPublisher) Publish(event Event) error {
 	payload, err := json.Marshal(event)
 	if err != nil {
@@ -121,8 +178,8 @@ func (pub *AMQPPublisher) Publish(event Event) error {
 		false,
 		false,
 		amqp.Publishing{
-			DeliveryMode: amqp.Persistent,
-			ContentType:  "application/json",
+			DeliveryMode: pub.DeliveryMode,
+			ContentType:  pub.ContentType,
 			Body:         payload,
 			Timestamp:    time.Now(),
 		})
