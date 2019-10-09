@@ -72,9 +72,14 @@ func (conn *AMQPConnection) Connect() error {
 }
 
 // Close closes AMQP channel and connection.
-func (conn *AMQPConnection) Close() {
-	conn.Channel.Close()
-	conn.Connection.Close()
+func (conn *AMQPConnection) Close() error {
+	if err := conn.Channel.Close(); err != nil {
+		return err
+	}
+	if err := conn.Connection.Close(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Publisher returns a new AMQP Publisher on this connection.
