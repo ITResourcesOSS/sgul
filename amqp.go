@@ -18,11 +18,22 @@ import (
 )
 
 type (
+	exchangeInfo struct {
+		exname string
+		extype string
+	}
 	// AMQPConnection .
 	AMQPConnection struct {
 		URI        string
 		Connection *amqp.Connection
 		Channel    *amqp.Channel
+		// keeps information on initialized Exchanges
+		// to be used to initialize Publishers: we need only name and type.
+		exchanges map[string]exchangeInfo
+
+		// keeps initialized amqp Queues
+		// to be used to initialize Subscribers
+		queues map[string]amqp.Queue
 	}
 	// AMQPPublisher define the AMQP Publisher structure.
 	// Normally can be used as a sort of repository by a business service.
@@ -54,23 +65,80 @@ var amqpConf = GetConfiguration().AMQP
 // NewAMQPConnection return a new disconnected AMQP Connection structure.
 func NewAMQPConnection() *AMQPConnection {
 	URI := fmt.Sprintf("amqp://%s:%s@%s:%d/%s", amqpConf.User, amqpConf.Password, amqpConf.Host, amqpConf.Port, amqpConf.VHost)
-	return &AMQPConnection{URI: URI}
+	return &AMQPConnection{
+		URI:       URI,
+		exchanges: make(map[string]exchangeInfo),
+		queues:    make(map[string]amqp.Queue),
+	}
 }
 
 // Connect open an AMQP connection and setup the channel.
 func (conn *AMQPConnection) Connect() error {
 	var err error
 
-	conn.Connection, err = amqp.Dial(conn.URI)
-	if err != nil {
+	if conn.Connection, err = amqp.Dial(conn.URI); err != nil {
 		return err
 	}
 
-	conn.Channel, err = conn.Connection.Channel()
-	if err != nil {
+	if conn.Channel, err = conn.Connection.Channel(); err != nil {
 		return err
 	}
 
+	if err = conn.declareExchanges(); err != nil {
+		return err
+	}
+
+	if err = conn.declareQueues(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// declareExchanges will setup each of the configured Exchanges
+func (conn *AMQPConnection) declareExchanges() error {
+	for _, exchange := range amqpConf.Exchanges {
+		err := conn.Channel.ExchangeDeclare(
+			exchange.Name,
+			exchange.Type,
+			exchange.Durable,
+			exchange.AutoDelete,
+			exchange.Internal,
+			exchange.NoWait,
+			nil)
+
+		if err != nil {
+			return err
+		}
+
+		// add exchange info into the exchanges map
+		ei := exchangeInfo{
+			exname: exchange.Name,
+			extype: exchange.Type,
+		}
+		conn.exchanges[ei.exname] = ei
+	}
+	return nil
+}
+
+func (conn *AMQPConnection) declareQueues() error {
+	for _, queue := range amqpConf.Queues {
+		q, err := conn.Channel.QueueDeclare(
+			queue.Name,
+			queue.Durable,
+			queue.AutoDelete,
+			queue.Exclusive,
+			queue.NoWait,
+			nil,
+		)
+
+		if err != nil {
+			return err
+		}
+
+		// add the queue into the queues map
+		conn.queues[q.Name] = q
+	}
 	return nil
 }
 
@@ -95,21 +163,21 @@ func (conn *AMQPConnection) Subscriber(queue string, consumer string, durable, a
 	return NewAMQPSubscriber(conn, queue, consumer, durable, autoDelete, autoAck, exclusive, noLocal, noWait)
 }
 
-// // NewAMQPPublisher return a new AMQP Publisher object.
-// func NewAMQPPublisher(connection *AMQPConnection, exchange string, exchangeType string, routingKey string) (*AMQPPublisher, error) {
-// 	if err := connection.Channel.ExchangeDeclare(
-// 		exchange, exchangeType,
-// 		true, false, false, false, nil); err != nil {
-// 		return nil, err
-// 	}
+// NewAMQPPublisher return a new AMQP Publisher object.
+func NewAMQPPublisher(connection *AMQPConnection, exchange string, exchangeType string, routingKey string) (*AMQPPublisher, error) {
+	if err := connection.Channel.ExchangeDeclare(
+		exchange, exchangeType,
+		true, false, false, false, nil); err != nil {
+		return nil, err
+	}
 
-// 	return &AMQPPublisher{
-// 		Connection:   connection,
-// 		Exchange:     exchange,
-// 		ExchangeType: exchangeType,
-// 		RoutingKey:   routingKey,
-// 	}, nil
-// }
+	return &AMQPPublisher{
+		Connection:   connection,
+		Exchange:     exchange,
+		ExchangeType: exchangeType,
+		RoutingKey:   routingKey,
+	}, nil
+}
 
 // NewPublisher return a new AMQP Publisher object initialized with "name"-publisher configuration.
 func (conn *AMQPConnection) NewPublisher(name string) (*AMQPPublisher, error) {

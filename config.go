@@ -208,6 +208,7 @@ type (
 		AutoDelete bool
 		Durable    bool
 		Internal   bool
+		Exclusive  bool
 		NoWait     bool
 	}
 
