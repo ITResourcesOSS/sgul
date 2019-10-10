@@ -22,7 +22,8 @@ type (
 		exname string
 		extype string
 	}
-	// AMQPConnection .
+	// AMQPConnection is the main struct to manage a connection to an AMQP server.
+	// It keeps exchanges and queues up and register AMQP publishers and subscribers.
 	AMQPConnection struct {
 		URI        string
 		Connection *amqp.Connection
@@ -34,6 +35,9 @@ type (
 		// keeps initialized amqp Queues
 		// to be used to initialize Subscribers
 		queues map[string]amqp.Queue
+
+		publishers  map[string]AMQPPublisher
+		subscribers map[string]AMQPSubscriber
 	}
 	// AMQPPublisher define the AMQP Publisher structure.
 	// Normally can be used as a sort of repository by a business service.
