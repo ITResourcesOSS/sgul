@@ -36,8 +36,8 @@ type (
 		// to be used to initialize Subscribers
 		queues map[string]amqp.Queue
 
-		publishers  map[string]AMQPPublisher
-		subscribers map[string]AMQPSubscriber
+		publishers  map[string]*AMQPPublisher
+		subscribers map[string]*AMQPSubscriber
 	}
 	// AMQPPublisher define the AMQP Publisher structure.
 	// Normally can be used as a sort of repository by a business service.
@@ -96,6 +96,10 @@ func (conn *AMQPConnection) Connect() error {
 		return err
 	}
 
+	if err = conn.initPublishers(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -146,6 +150,19 @@ func (conn *AMQPConnection) declareQueues() error {
 	return nil
 }
 
+func (conn *AMQPConnection) initPublishers() error {
+	for _, p := range amqpConf.Publishers {
+		if conn.publishers[p.Name] == nil {
+			publisher, err := conn.NewPublisher(p.Name)
+			if err != nil {
+				return err
+			}
+			conn.publishers[p.Name] = publisher
+		}
+
+	}
+}
+
 // Close closes AMQP channel and connection.
 func (conn *AMQPConnection) Close() error {
 	if err := conn.Channel.Close(); err != nil {
@@ -185,33 +202,73 @@ func NewAMQPPublisher(connection *AMQPConnection, exchange string, exchangeType 
 
 // NewPublisher return a new AMQP Publisher object initialized with "name"-publisher configuration.
 func (conn *AMQPConnection) NewPublisher(name string) (*AMQPPublisher, error) {
-	if publisher, ok := publisherFor(name); ok {
-		if exchange, ok := exchangeFor(publisher.Name); ok {
-			err := conn.Channel.ExchangeDeclare(
-				exchange.Name,
-				exchange.Type,
-				exchange.Durable,
-				exchange.AutoDelete,
-				exchange.Internal,
-				exchange.NoWait,
-				nil)
-
-			if err != nil {
-				return nil, err
-			}
-
-			return &AMQPPublisher{
-				Connection:   conn,
-				Exchange:     exchange.Name,
-				ExchangeType: exchange.Type,
-				RoutingKey:   publisher.RoutingKey,
-				ContentType:  publisher.ContentType,
-				DeliveryMode: publisher.DeliveryMode,
-			}, nil
-		}
+	if conn.publishers[name] != nil {
+		return conn.publishers[name], nil
 	}
 
-	return nil, nil
+	// get publisher configuration
+	p, ok := publisherFor(name)
+
+	if !ok {
+		return nil, fmt.Errorf("no configuration fond for publisher '%s'", name)
+	}
+
+	// initialize and register the AMQP Publisher struct
+	ei := conn.exchanges[p.Exchange]
+	publisher := &AMQPPublisher{
+		Connection:   conn,
+		Exchange:     ei.exname,
+		ExchangeType: ei.extype,
+		RoutingKey:   p.RoutingKey,
+		ContentType:  p.ContentType,
+		DeliveryMode: p.DeliveryMode,
+	}
+
+	conn.publishers[p.Name] = publisher
+
+	return publisher, nil
+
+	// if p, ok := publisherFor(name); ok {
+	// 	ei := conn.exchanges[p.Exchange]
+	// 	publisher := &AMQPPublisher{
+	// 		Connection:   conn,
+	// 		Exchange:     ei.exname,
+	// 		ExchangeType: ei.extype,
+	// 		RoutingKey:   p.RoutingKey,
+	// 		ContentType:  p.ContentType,
+	// 		DeliveryMode: p.DeliveryMode,
+	// 	}
+
+	// 	conn.publishers[p.Name] = publisher
+
+	// 	return publisher, nil
+
+	// 	// if exchange, ok := exchangeFor(publisher.Name); ok {
+	// 	// 	err := conn.Channel.ExchangeDeclare(
+	// 	// 		exchange.Name,
+	// 	// 		exchange.Type,
+	// 	// 		exchange.Durable,
+	// 	// 		exchange.AutoDelete,
+	// 	// 		exchange.Internal,
+	// 	// 		exchange.NoWait,
+	// 	// 		nil)
+
+	// 	// 	if err != nil {
+	// 	// 		return nil, err
+	// 	// 	}
+
+	// 	// 	return &AMQPPublisher{
+	// 	// 		Connection:   conn,
+	// 	// 		Exchange:     exchange.Name,
+	// 	// 		ExchangeType: exchange.Type,
+	// 	// 		RoutingKey:   publisher.RoutingKey,
+	// 	// 		ContentType:  publisher.ContentType,
+	// 	// 		DeliveryMode: publisher.DeliveryMode,
+	// 	// 	}, nil
+	// 	// }
+	// }
+
+	// return nil, nil
 }
 
 func publisherFor(name string) (Publisher, bool) {
