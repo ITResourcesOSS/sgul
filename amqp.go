@@ -70,9 +70,11 @@ var amqpConf = GetConfiguration().AMQP
 func NewAMQPConnection() *AMQPConnection {
 	URI := fmt.Sprintf("amqp://%s:%s@%s:%d/%s", amqpConf.User, amqpConf.Password, amqpConf.Host, amqpConf.Port, amqpConf.VHost)
 	return &AMQPConnection{
-		URI:       URI,
-		exchanges: make(map[string]exchangeInfo),
-		queues:    make(map[string]amqp.Queue),
+		URI:         URI,
+		exchanges:   make(map[string]exchangeInfo),
+		queues:      make(map[string]amqp.Queue),
+		publishers:  make(map[string]*AMQPPublisher),
+		subscribers: make(map[string]*AMQPSubscriber),
 	}
 }
 
