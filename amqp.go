@@ -161,6 +161,7 @@ func (conn *AMQPConnection) initPublishers() error {
 		}
 
 	}
+	return nil
 }
 
 // Close closes AMQP channel and connection.
