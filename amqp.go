@@ -227,7 +227,7 @@ func (conn *AMQPConnection) NewPublisher(name string) (*AMQPPublisher, error) {
 		DeliveryMode: p.DeliveryMode,
 	}
 
-	conn.publishers[p.Name] = publisher
+	// conn.publishers[p.Name] = publisher
 
 	return publisher, nil
 
