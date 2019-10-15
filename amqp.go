@@ -36,7 +36,10 @@ type (
 		// to be used to initialize Subscribers
 		queues map[string]amqp.Queue
 
-		publishers  map[string]*AMQPPublisher
+		// publishers to be send messages to the relative exchanges
+		publishers map[string]*AMQPPublisher
+
+		// subscribers to start and listen for messages from relative queues
 		subscribers map[string]*AMQPSubscriber
 	}
 	// AMQPPublisher define the AMQP Publisher structure.
