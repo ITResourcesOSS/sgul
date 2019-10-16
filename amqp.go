@@ -37,10 +37,10 @@ type (
 		queues map[string]amqp.Queue
 
 		// publishers to be send messages to the relative exchanges
-		publishers map[string]*AMQPPublisher
+		Publishers map[string]*AMQPPublisher
 
 		// subscribers to start and listen for messages from relative queues
-		subscribers map[string]*AMQPSubscriber
+		Subscribers map[string]*AMQPSubscriber
 	}
 	// AMQPPublisher define the AMQP Publisher structure.
 	// Normally can be used as a sort of repository by a business service.
@@ -76,8 +76,8 @@ func NewAMQPConnection() *AMQPConnection {
 		URI:         URI,
 		exchanges:   make(map[string]exchangeInfo),
 		queues:      make(map[string]amqp.Queue),
-		publishers:  make(map[string]*AMQPPublisher),
-		subscribers: make(map[string]*AMQPSubscriber),
+		Publishers:  make(map[string]*AMQPPublisher),
+		Subscribers: make(map[string]*AMQPSubscriber),
 	}
 }
 
@@ -157,12 +157,12 @@ func (conn *AMQPConnection) declareQueues() error {
 
 func (conn *AMQPConnection) initPublishers() error {
 	for _, p := range amqpConf.Publishers {
-		if conn.publishers[p.Name] == nil {
+		if conn.Publishers[p.Name] == nil {
 			publisher, err := conn.NewPublisher(p.Name)
 			if err != nil {
 				return err
 			}
-			conn.publishers[p.Name] = publisher
+			conn.Publishers[p.Name] = publisher
 		}
 
 	}
@@ -208,8 +208,8 @@ func NewAMQPPublisher(connection *AMQPConnection, exchange string, exchangeType 
 
 // NewPublisher return a new AMQP Publisher object initialized with "name"-publisher configuration.
 func (conn *AMQPConnection) NewPublisher(name string) (*AMQPPublisher, error) {
-	if conn.publishers[name] != nil {
-		return conn.publishers[name], nil
+	if conn.Publishers[name] != nil {
+		return conn.Publishers[name], nil
 	}
 
 	// get publisher configuration
