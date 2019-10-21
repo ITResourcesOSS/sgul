@@ -76,7 +76,7 @@ func jwtAuthorize(enforcer RolesEnforcer, next http.Handler) http.HandlerFunc {
 
 		// check roles authorization: 403 Forbidden iff check fails
 		//if !ContainsString(roles, principal.Role) {
-		if !enforcer.Enforce(principal.Role, r.URL.Path, r.Method) {
+		if !enforcer.Enforce(r.Context(), principal.Role, r.URL.Path, r.Method) {
 			fmt.Printf("error -> %s", errors.New("Forbidden"))
 			RenderError(w,
 				NewHTTPError(
