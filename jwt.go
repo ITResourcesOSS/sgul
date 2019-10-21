@@ -37,7 +37,8 @@ var ErrPrincipalNotInContext = errors.New("No Principal in request context")
 // jwtAuthorize will authorize the incoming user against input roles.
 // if the user is authorized, a Principal struct will be set in request context
 // for later use in the request mgmtr chain.
-func jwtAuthorize(roles []string, next http.Handler) http.HandlerFunc {
+//func jwtAuthorize(roles []string, next http.Handler) http.HandlerFunc {
+func jwtAuthorize(enforcer RolesEnforcer, next http.Handler) http.HandlerFunc {
 	conf := GetConfiguration().API.Security
 	secret := []byte(conf.Jwt.Secret)
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -74,7 +75,8 @@ func jwtAuthorize(roles []string, next http.Handler) http.HandlerFunc {
 		}
 
 		// check roles authorization: 403 Forbidden iff check fails
-		if !ContainsString(roles, principal.Role) {
+		//if !ContainsString(roles, principal.Role) {
+		if !enforcer.Enforce(principal.Role, r.URL.Path, r.Method) {
 			fmt.Printf("error -> %s", errors.New("Forbidden"))
 			RenderError(w,
 				NewHTTPError(
@@ -90,17 +92,27 @@ func jwtAuthorize(roles []string, next http.Handler) http.HandlerFunc {
 }
 
 // JWTAuthorizer is the JWT authentication middleware to use on mux (a. e. Chi router or Groups).
-func JWTAuthorizer(roles []string) func(next http.Handler) http.Handler {
+//func JWTAuthorizer(roles []string) func(next http.Handler) http.Handler {
+func JWTAuthorizer(enforcer RolesEnforcer) func(next http.Handler) http.Handler {
 	jwtAuthorizer := func(next http.Handler) http.Handler {
-		return http.HandlerFunc(jwtAuthorize(roles, next))
+		// return http.HandlerFunc(jwtAuthorize(roles, next))
+		if enforcer == nil {
+			enforcer = &MatchAllEnforcer{}
+		}
+		return http.HandlerFunc(jwtAuthorize(enforcer, next))
 	}
 	return jwtAuthorizer
 }
 
 // JWTRouteAuthorizer is the JWT authentication middleware to use on single route (a.e. Chi router get, post, ...).
-func JWTRouteAuthorizer(roles []string) func(next http.HandlerFunc) http.HandlerFunc {
+//func JWTRouteAuthorizer(roles []string) func(next http.HandlerFunc) http.HandlerFunc {
+func JWTRouteAuthorizer(enforcer RolesEnforcer) func(next http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
-		return jwtAuthorize(roles, next)
+		//return jwtAuthorize(roles, next)
+		if enforcer == nil {
+			enforcer = &MatchAllEnforcer{}
+		}
+		return jwtAuthorize(enforcer, next)
 	}
 
 }
