@@ -29,7 +29,7 @@ func NewMatchRoleEnforcer(roles []string) *MatchRoleEnforcer {
 // The use is authorized only if it role is in roles[].
 // If roles[] size is 0 user will not be authorized.
 func (mre *MatchRoleEnforcer) Enforce(role string, route string, method string) bool {
-	logger.Debugf("Enforcing user role for resource with MatchRoleEnforcer strategy", "role", role, "route", route, "method", method)
+	logger.Debugw("Enforcing user role for resource with MatchRoleEnforcer strategy", "role", role, "route", route, "method", method)
 	if len(mre.roles) > 0 {
 		return ContainsString(mre.roles, role)
 	}
