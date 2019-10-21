@@ -44,6 +44,6 @@ func (mre *MatchRoleEnforcer) Enforce(ctx context.Context, role string, route st
 }
 
 func logEnforce(ctx context.Context, role string, route string, method string, kind string) {
-	logger.Infow(fmt.Sprintf("Enforcing role %s for %s %s with MatchRoleEnforcer strategy", role, method, route),
+	logger.Infow(fmt.Sprintf("Enforcing role '%s' for '%s %s' with %s strategy", role, method, route, kind),
 		"request-id", middleware.GetReqID(ctx))
 }
