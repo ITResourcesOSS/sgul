@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/casbin/casbin"
+
 	"github.com/go-chi/chi/middleware"
 )
 
@@ -40,6 +42,34 @@ func (mre *MatchRoleEnforcer) Enforce(ctx context.Context, role string, route st
 	if len(mre.roles) > 0 {
 		return ContainsString(mre.roles, role)
 	}
+	return false
+}
+
+// CasbinEnforcer .
+type CasbinEnforcer struct {
+	enforcer *casbin.Enforcer
+}
+
+// NewCasbinEnforcer .
+func NewCasbinEnforcer() *CasbinEnforcer {
+	return &CasbinEnforcer{
+		enforcer: casbin.NewEnforcer("./auth_model.conf", "./policy.csv"),
+	}
+}
+
+// Enforce proxy casbin Enforce func.
+func (ce *CasbinEnforcer) Enforce(ctx context.Context, role string, route string, method string) bool {
+	logEnforce(ctx, role, route, method, "CasbinEnforcer")
+	res, err := ce.enforcer.EnforceSafe(role, route, method)
+	if err != nil {
+		logger.Errorw("unable to enforce with casbin enforcer", "error", err, "request-id", middleware.GetReqID(ctx))
+		return false
+	}
+
+	if res {
+		return true
+	}
+
 	return false
 }
 
