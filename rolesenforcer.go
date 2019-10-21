@@ -18,7 +18,7 @@ type MatchAllEnforcer struct{}
 
 // Enforce always authorize a user. It skips role/route/method checks.
 func (mae *MatchAllEnforcer) Enforce(ctx context.Context, role string, route string, method string) bool {
-	logEnforce(ctx, role, route, method "MatchAllEnforcer")
+	logEnforce(ctx, role, route, method, "MatchAllEnforcer")
 	return true
 }
 
@@ -36,7 +36,7 @@ func NewMatchRoleEnforcer(roles []string) *MatchRoleEnforcer {
 // The use is authorized only if it role is in roles[].
 // If roles[] size is 0 user will not be authorized.
 func (mre *MatchRoleEnforcer) Enforce(ctx context.Context, role string, route string, method string) bool {
-	logEnforce(ctx, role, route, method "MatchRoleEnforcer")
+	logEnforce(ctx, role, route, method, "MatchRoleEnforcer")
 	if len(mre.roles) > 0 {
 		return ContainsString(mre.roles, role)
 	}
