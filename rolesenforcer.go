@@ -2,6 +2,7 @@ package sgul
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-chi/chi/middleware"
 )
@@ -17,8 +18,7 @@ type MatchAllEnforcer struct{}
 
 // Enforce always authorize a user. It skips role/route/method checks.
 func (mae *MatchAllEnforcer) Enforce(ctx context.Context, role string, route string, method string) bool {
-	logger.Debugw("Enforcing user role for resource with MatchAllEnforcer strategy",
-		"role", role, "route", route, "method", method, "request-id", middleware.GetReqID(ctx))
+	logEnforce(ctx, role, route, method "MatchAllEnforcer")
 	return true
 }
 
@@ -36,10 +36,14 @@ func NewMatchRoleEnforcer(roles []string) *MatchRoleEnforcer {
 // The use is authorized only if it role is in roles[].
 // If roles[] size is 0 user will not be authorized.
 func (mre *MatchRoleEnforcer) Enforce(ctx context.Context, role string, route string, method string) bool {
-	logger.Debugw("Enforcing user role for resource with MatchRoleEnforcer strategy",
-		"role", role, "route", route, "method", method, "request-id", middleware.GetReqID(ctx))
+	logEnforce(ctx, role, route, method "MatchRoleEnforcer")
 	if len(mre.roles) > 0 {
 		return ContainsString(mre.roles, role)
 	}
 	return false
+}
+
+func logEnforce(ctx context.Context, role string, route string, method string, kind string) {
+	logger.Infow(fmt.Sprintf("Enforcing role %s for %s %s with MatchRoleEnforcer strategy", role, method, route),
+		"request-id", middleware.GetReqID(ctx))
 }
