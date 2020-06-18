@@ -40,12 +40,20 @@ func pager(next http.Handler) http.HandlerFunc {
 			var err error
 			pVal, err = strconv.Atoi(p)
 			if err != nil {
-				RenderError(w, NewHTTPError(err, http.StatusBadRequest, "Malformed 'page' param", middleware.GetReqID(r.Context())))
+				RenderError(
+					w,
+					NewHTTPError(
+						err,
+						http.StatusBadRequest, "Malformed 'page' param", middleware.GetReqID(r.Context())))
 				return
 			}
 			sVal, err = strconv.Atoi(s)
 			if err != nil {
-				RenderError(w, NewHTTPError(err, http.StatusBadRequest, "Malformed 'size' param", middleware.GetReqID(r.Context())))
+				RenderError(
+					w,
+					NewHTTPError(
+						err,
+						http.StatusBadRequest, "Malformed 'size' param", middleware.GetReqID(r.Context())))
 				return
 			}
 			page := Page{Page: pVal, Size: sVal}
